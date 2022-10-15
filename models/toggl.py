@@ -1,71 +1,91 @@
-""" Toggl Models """
-
-from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, BigInteger
+from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, BigInteger, Table
+from sqlalchemy.orm import relationship
 from util import Database
+
+toggl_organization_member = Table(
+    "toggl_organization_member",
+    Database.Base.metadata,
+    Column("organization_id", ForeignKey("toggl_organization.id"), primary_key=True),
+    Column("user_id", ForeignKey("toggl_user.id"), primary_key=True),
+)
 
 
 class User(Database.Base):
-    """
-    Representation of a Toggl user
-
-    See also https://developers.track.toggl.com/docs/api/me#get-me
-    """
-
     __tablename__ = "toggl_user"
-    id = Column(Integer, primary_key=True)
-    fullname = Column(String)
-    email = Column(String)
-    country_id = Column(Integer)
-    timezone = Column(String)
-    beginning_of_week = Column(Integer)
-    image_url = Column(String)
-    created_at = Column(DateTime)
-    api_token = Column(String)
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    fullname = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    country_id = Column(Integer, nullable=False)
+    timezone = Column(String, nullable=False)
+    beginning_of_week = Column(Integer, nullable=False)
+    image_url = Column(String, nullable=False)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    api_token = Column(String, nullable=False)
 
-    @classmethod
-    def create_from_data(cls: 'User', data: map) -> 'User':
-        """ Creates a new User Object based on an API response """
-
-        return User(
-            id=data['id'],
-            fullname=data['fullname'],
-            email=data['email'],
-            country_id=data['country_id'],
-            timezone=data['timezone'],
-            beginning_of_week=data['beginning_of_week'],
-            image_url=data['image_url'],
-            created_at=data['created_at'],
-            api_token=data['api_token'],
-        )
+    organizations = relationship(
+        "models.toggl.Organization",
+        secondary=toggl_organization_member,
+        back_populates="members",
+    )
+    time_entries = relationship("models.toggl.TimeEntry", back_populates="user")
 
     def __repr__(self):
-        return f"<toggl.User(id='{self.id}')>"
+        return f"<User(id='{self.id}')>"
+
+
+class Organization(Database.Base):
+    __tablename__ = "toggl_organization"
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    name = Column(String, nullable=False)
+    created_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    deleted_at = Column(DateTime)
+
+    members = relationship(
+        "models.toggl.User",
+        secondary=toggl_organization_member,
+        back_populates="organizations",
+    )
+    workspaces = relationship("models.toggl.Workspace", back_populates="organization")
+
+    def __repr__(self):
+        return f"<Organization(id='{self.id}';name='{self.name}')>"
+
+
+class Workspace(Database.Base):
+    __tablename__ = "toggl_workspace"
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    organization_id = Column(
+        Integer, ForeignKey("toggl_organization.id"), nullable=False
+    )
+    name = Column(String, nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    deleted_at = Column(DateTime)
+    logo_url = Column(String, nullable=False)
+
+    organization = relationship(
+        "models.toggl.Organization", back_populates="workspaces"
+    )
+    time_entries = relationship("models.toggl.TimeEntry", back_populates="workspace")
+
+    def __repr__(self):
+        return f"<Workspace(id='{self.id}';name='{self.name}')>"
 
 
 class TimeEntry(Database.Base):
-    """
-    Representation of a Toggl TimeEntry
-
-    See also https://developers.track.toggl.com/docs/api/time_entries#get-timeentries
-    """
     __tablename__ = "toggl_time_entry"
-    id = Column(BigInteger, primary_key=True)
-    description = Column(String)
-    start = Column(DateTime)
+    id = Column(BigInteger, primary_key=True, autoincrement=False)
+    user_id = Column(Integer, ForeignKey("toggl_user.id"), nullable=False)
+    workspace_id = Column(Integer, ForeignKey("toggl_workspace.id"), nullable=False)
+    description = Column(String, nullable=False)
+    start = Column(DateTime, nullable=False)
     stop = Column(DateTime)
-    user_id = Column(Integer, ForeignKey("toggl_user.id"))
+    updated_at = Column(DateTime, nullable=False)
+    server_deleted_at = Column(DateTime)
 
-    @classmethod
-    def create_from_data(cls: 'TimeEntry', data: map) -> 'TimeEntry':
-        """ Creates a new TimeEntry Object based on an API response """
-
-        return TimeEntry(
-            id=data['id'],
-            description=data['description'],
-            start=data['start'],
-            stop=data['stop'],
-            user_id=data['user_id'],
-        )
+    user = relationship("models.toggl.User", back_populates="time_entries")
+    workspace = relationship("models.toggl.Workspace", back_populates="time_entries")
 
     def __repr__(self):
-        return f"<toggl.TimeEntry(id='{self.id}')>"
+        return f"<TimeEntry(id='{self.id}')>"

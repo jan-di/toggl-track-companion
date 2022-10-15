@@ -20,16 +20,16 @@ class User(Database.Base):
     is_premium = Column(Boolean)
 
     @classmethod
-    def create_from_data(cls: 'User', data: map) -> 'User':
-        """ Creates a new TelegramUser Object based on an API response """
+    def create_from_data(cls: "User", data: map) -> "User":
+        """Creates a new TelegramUser Object based on an API response"""
 
         return User(
-            id=data['id'],
-            firstname=data['first_name'],
-            lastname=data['last_name'],
-            username=data['username'],
-            language_code=data['language_code'],
-            is_premium=data['is_premium'] or False
+            id=data["id"],
+            firstname=data["first_name"],
+            lastname=data["last_name"],
+            username=data["username"],
+            language_code=data["language_code"],
+            is_premium=data["is_premium"] or False,
         )
 
     def __repr__(self):
