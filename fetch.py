@@ -1,15 +1,18 @@
-from models.toggl import User
+from models.app import User
 from toggl import Api
 from util import load_config, Database
+import logging
 
 config = load_config()
 database = Database(config["DATABASE_URI"])
+logging.basicConfig(level=logging.INFO)
 
 with database.get_session() as session:
-    for toggl_user in session.query(User).all():
+    for user in session.query(User).all():
+        toggl_user = user.toggl_user
 
-        session.merge(toggl_user)
-
+        logging.info("user %s", toggl_user.fullname)
+        
         toggl_api = Api(toggl_user.api_token)
 
         # Fetch all organizations of the user

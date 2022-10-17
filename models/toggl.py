@@ -23,6 +23,9 @@ class User(Database.Base):
     updated_at = Column(DateTime, nullable=False)
     api_token = Column(String, nullable=False)
 
+    app_user = relationship(
+        "models.app.User", back_populates="toggl_user", uselist=False
+    )
     organizations = relationship(
         "models.toggl.Organization",
         secondary=toggl_organization_member,
