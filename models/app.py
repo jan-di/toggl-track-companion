@@ -9,18 +9,25 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from util import Database
+from models.toggl import User as TogglUser
 
 
 class User(Database.Base):
     __tablename__ = "app_user"
-    id = Column(Integer, primary_key=True)
-    toggl_user_id = Column(Integer, ForeignKey("toggl_user.id"), nullable=False)
-    start = Column(Date, nullable=False)
-    disabled = Column(Boolean, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    toggl_user_id = Column(Integer, ForeignKey("toggl_user.id"))
+    start = Column(Date)
+    enabled = Column(Boolean)
+    name = Column(String, nullable=False)
+    username = Column(String)
+    language_code = Column(String)
 
     toggl_user = relationship(
         "models.toggl.User", back_populates="app_user", uselist=False
     )
+
+    def __init__(self, user_id: int):
+        self.id = user_id
 
 
 class Schedule(Database.Base):

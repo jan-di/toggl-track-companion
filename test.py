@@ -5,7 +5,6 @@ from util import load_config, Database
 
 # pylint: disable=unused-import
 import models.toggl
-import models.telegram
 import models.app
 
 config = load_config()
@@ -71,13 +70,13 @@ with database.get_session() as session:
     )
     session.merge(scheduleex2)
 
-    app_user = models.app.User(
-        id=2,
-        toggl_user_id=8393756,
-        start=date.fromisoformat("2022-10-01"),
-        disabled=False,
-    )
-    session.merge(app_user)
+    # app_user = models.app.User(
+    #     id=2,
+    #     toggl_user_id=8393756,
+    #     start=date.fromisoformat("2022-10-01"),
+    #     disabled=False,
+    # )
+    # session.merge(app_user)
 
     session.commit()
     session.close()

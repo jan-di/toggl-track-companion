@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import logging
-from sqlalchemy import false
 
 
 from telegram import (
@@ -15,10 +14,11 @@ from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
+    ConversationHandler,
     Filters,
     CallbackContext,
 )
-from models.telegram import User
+from models.app import User
 
 from util import load_config, Database
 
@@ -40,28 +40,33 @@ def start(update: Update, context: CallbackContext) -> None:
     )
 
 
-def help_command(update: Update, context: CallbackContext) -> None:
+def regiter_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     update.message.reply_text("Help!")
 
 
+
+   
+
+
 def echo(update: Update, context: CallbackContext) -> None:
-    """Echo the user message."""
-
-    # print(update.message.from_user)
-
     user_data = update.message.from_user
-    tg_user = User(
-        id=user_data["id"],
-        firstname=user_data["first_name"],
-        lastname=user_data["last_name"],
-        username=user_data["username"],
-        language_code=user_data["language_code"],
-        is_premium=user_data["is_premium"] or False,
-    )
 
     with database.get_session() as session:
-        session.merge(tg_user)
+        user = session.query(User).get(user_data["id"])
+
+        if not user:
+            user = User(user_data["id"])
+            user.enabled = None
+            user.start = None
+
+        user.name = f"{user_data['first_name']} {user_data['last_name'] if user_data['last_name'] is not None else '' }".strip()
+        user.username = user_data["username"]
+        user.language_code = user_data["language_code"]
+
+        print(user)
+
+        session.merge(user)
         session.commit()
         session.flush()
 
@@ -82,7 +87,6 @@ def main() -> None:
     config = load_config()
     database = Database(config["DATABASE_URI"])
 
-    """Start the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(config["TELEGRAM_TOKEN"])
 
@@ -92,6 +96,20 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
+
+    # register_handler = ConversationHandler(
+    #     entry_points=[CommandHandler('register', start)],
+    #     states={
+    #         GENDER: [MessageHandler(Filters.regex('^(Boy|Girl|Other)$'), gender)],
+    #         PHOTO: [MessageHandler(Filters.photo, photo), CommandHandler('skip', skip_photo)],
+    #         LOCATION: [
+    #             MessageHandler(Filters.location, location),
+    #             CommandHandler('skip', skip_location),
+    #         ],
+    #         BIO: [MessageHandler(Filters.text & ~Filters.command, bio)],
+    #     },
+    #     fallbacks=[CommandHandler('cancel', cancel)],
+    # )
 
     # on non command i.e message - echo the message on Telegram
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))

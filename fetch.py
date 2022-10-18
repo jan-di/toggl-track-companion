@@ -11,8 +11,11 @@ with database.get_session() as session:
     for user in session.query(User).all():
         toggl_user = user.toggl_user
 
+        if toggl_user is None:
+            continue
+
         logging.info("user %s", toggl_user.fullname)
-        
+
         toggl_api = Api(toggl_user.api_token)
 
         # Fetch all organizations of the user

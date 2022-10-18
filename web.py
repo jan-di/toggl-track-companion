@@ -7,24 +7,29 @@ app = Flask(__name__)
 config = load_config()
 
 
-@app.route("/")
-def hello_world():
+def validate_telegram_auth(token: str, params: dict[str]):
+    token_hash = hashlib.sha256(str.encode(token)).digest()
+    check_hash = params["hash"]
 
-    args = request.args
+    params = params.copy()
+    params.pop("hash")
 
-    key_hash = hashlib.sha256(str.encode(config["TELEGRAM_TOKEN"])).hexdigest()
-
-    cmp_hash = hmac.new(
-        str.encode(key_hash), str.encode(""), hashlib.sha256
+    compare_string = "\n".join(map(lambda key: f"{key}={params[key]}", sorted(params)))
+    compare_hash = hmac.new(
+        token_hash, str.encode(compare_string), hashlib.sha256
     ).hexdigest()
 
-    # secret_key = SHA256(<bot_token>)
-    # if (hex(HMAC_SHA256(data_check_string, secret_key)) == hash) {
-    # // data is from Telegram
-    # }
+    return check_hash == compare_hash
 
-    return f"<p>Hello, World! {args.to_dict()}</p>key_hash:{key_hash}<br/>hash: {args.hash}<br/>cmp_hash:{cmp_hash}"
 
+@app.route("/")
+def hello_world():
+    result = ""
+    result += (
+        f"{validate_telegram_auth(config['TELEGRAM_TOKEN'], request.args.to_dict())}"
+    )
+
+    return result
 
 if __name__ == "__main__":
-    app.run(debug=True, ssl_context="adhoc")
+    app.run(debug=True, ssl_context="adhoc", use_reloader=False)

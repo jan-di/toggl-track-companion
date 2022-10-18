@@ -6,11 +6,22 @@
     "compounds": [
         {
             "name": "All",
-            "configurations": ["Web", "Bot"],
+            "configurations": [
+                "Web",
+                "Bot"
+            ],
             "stopAll": true
         }
     ],
     "configurations": [
+        {
+            "name": "Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
         {
             "name": "Web",
             "type": "python",

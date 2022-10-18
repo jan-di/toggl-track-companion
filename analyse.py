@@ -131,6 +131,10 @@ def main():
         for user in session.query(User).all():
             toggl_user = user.toggl_user
 
+            print(toggl_user)
+            if toggl_user is None:
+                continue
+
             for toggl_organization in toggl_user.organizations:
                 for toggl_workspace in toggl_organization.workspaces:
                     print(
