@@ -3,12 +3,27 @@
     // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
     // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "All",
+            "configurations": ["Web", "Bot"],
+            "stopAll": true
+        }
+    ],
     "configurations": [
         {
-            "name": "Python: Aktuelle Datei",
+            "name": "Web",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "web.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Bot",
+            "type": "python",
+            "request": "launch",
+            "program": "bot.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
