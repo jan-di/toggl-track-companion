@@ -1,6 +1,6 @@
 import httpx
 
-from models.toggl import Organization, User, TimeEntry, Workspace
+from app.models.toggl import Organization, User, TimeEntry, Workspace
 
 
 class Api:

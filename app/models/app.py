@@ -8,11 +8,11 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import relationship
-from util import Database
-from models.toggl import User as TogglUser
+
+from app.models.base import orm_base
 
 
-class User(Database.Base):
+class User(orm_base):
     __tablename__ = "app_user"
     id = Column(Integer, primary_key=True, autoincrement=False)
     toggl_user_id = Column(Integer, ForeignKey("toggl_user.id"))
@@ -23,14 +23,14 @@ class User(Database.Base):
     language_code = Column(String)
 
     toggl_user = relationship(
-        "models.toggl.User", back_populates="app_user", uselist=False
+        "app.models.toggl.User", back_populates="app_user", uselist=False
     )
 
     def __init__(self, user_id: int):
         self.id = user_id
 
 
-class Schedule(Database.Base):
+class Schedule(orm_base):
     __tablename__ = "app_schedule"
     id = Column(Integer, primary_key=True)
     toggl_user_id = Column(Integer, ForeignKey("toggl_user.id"), nullable=False)
@@ -51,7 +51,7 @@ class Schedule(Database.Base):
         return f"<Schedule(id='{self.id}')>"
 
 
-class ScheduleException(Database.Base):
+class ScheduleException(orm_base):
     __tablename__ = "app_schedule_exception"
     id = Column(Integer, primary_key=True)
     toggl_user_id = Column(Integer, ForeignKey("toggl_user.id"), nullable=False)

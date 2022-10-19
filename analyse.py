@@ -1,13 +1,11 @@
-# from re import X
-# import httpx
 from calendar import day_abbr
 from datetime import datetime, timedelta, date
 from dateutil.rrule import rrulestr
-from models.app import ScheduleException, User, Schedule
-from models.toggl import TimeEntry, User as TogglUser
-from repository.app import ScheduleExceptionRepository, ScheduleRepository
-from repository.toggl import TimeEntryRepository
-from util import load_config, Database
+from app.models.app import ScheduleException, User, Schedule
+from app.models.toggl import TimeEntry
+from app.repository.app import ScheduleExceptionRepository, ScheduleRepository
+from app.repository.toggl import TimeEntryRepository
+from app.util import Config, Database
 
 
 class Day:
@@ -119,8 +117,8 @@ def format_percentage(percent: float, precision: int = 2):
 
 
 def main():
-    config = load_config()
-    database = Database(config["DATABASE_URI"])
+    config = Config()
+    database = Database(config.database_uri)
 
     now = datetime.now()
 
@@ -131,7 +129,6 @@ def main():
         for user in session.query(User).all():
             toggl_user = user.toggl_user
 
-            print(toggl_user)
             if toggl_user is None:
                 continue
 

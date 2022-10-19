@@ -1,10 +1,10 @@
-from models.app import User
-from toggl import Api
-from util import load_config, Database
 import logging
+from app.models.app import User
+from app.toggl import Api
+from app.util import Config, Database
 
-config = load_config()
-database = Database(config["DATABASE_URI"])
+config = Config()
+database = Database(config.database_uri)
 logging.basicConfig(level=logging.INFO)
 
 with database.get_session() as session:

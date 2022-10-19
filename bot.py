@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import logging
+from flask import url_for
 
 
 from telegram import (
+    BotCommand,
     LoginUrl,
     Update,
     ForceReply,
@@ -14,13 +16,12 @@ from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
-    ConversationHandler,
     Filters,
     CallbackContext,
 )
-from models.app import User
-
-from util import load_config, Database
+from app.flask import create_app
+from app.telegram import create_or_update_user
+from app.util import Config, Database
 
 # Enable logging
 logging.basicConfig(
@@ -29,10 +30,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-def start(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /start is issued."""
+
+def start_command(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     update.message.reply_markdown_v2(
         rf"Hi {user.mention_markdown_v2()}\!",
@@ -40,86 +39,88 @@ def start(update: Update, context: CallbackContext) -> None:
     )
 
 
-def regiter_command(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    update.message.reply_text("Help!")
+def connect_command(update: Update, context: CallbackContext) -> None:
+    sender = update.message.from_user
+
+    with context.bot_data["database"].get_session() as session:
+        user = create_or_update_user(session, sender)
+
+        if user.toggl_user is not None:
+            update.message.reply_text(
+                f"You are already connected with Toggl Track account {user.toggl_user.email} (#{user.toggl_user.id})!"
+            )
+        else:
+            with context.bot_data["flask"].app_context():
+                login_url = LoginUrl(url_for("auth", _scheme="https"))
+            keyboard = [
+                [
+                    InlineKeyboardButton("Open registration page", login_url=login_url),
+                ],
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            update.message.reply_text(
+                "Click to get to the registration dialog:", reply_markup=reply_markup
+            )
 
 
+def disconnect_command(update: Update, context: CallbackContext) -> None:
+    sender = update.effective_user
 
-   
+    with context.bot_data["database"].get_session() as session:
+        user = create_or_update_user(session, sender)
+
+        if user.toggl_user is None:
+            update.message.reply_text(
+                "You are not connected with a Toggl Track account."
+            )
+        else:
+            previous_toggl_user = user.toggl_user
+            user.toggl_user = None
+            user.start = None
+            user.enabled = None
+
+            session.commit()
+            session.flush()
+
+            update.message.reply_text(
+                f"Diconnected from Toggl Track account {previous_toggl_user.email} (#{previous_toggl_user.id})"
+            )
 
 
 def echo(update: Update, context: CallbackContext) -> None:
-    user_data = update.message.from_user
+    sender = update.effective_user
 
-    with database.get_session() as session:
-        user = session.query(User).get(user_data["id"])
+    with context.bot_data["database"].get_session() as session:
+        create_or_update_user(session, sender)
 
-        if not user:
-            user = User(user_data["id"])
-            user.enabled = None
-            user.start = None
-
-        user.name = f"{user_data['first_name']} {user_data['last_name'] if user_data['last_name'] is not None else '' }".strip()
-        user.username = user_data["username"]
-        user.language_code = user_data["language_code"]
-
-        print(user)
-
-        session.merge(user)
-        session.commit()
-        session.flush()
-
-    login_url = LoginUrl("https://127.0.0.1:5000/")
-    keyboard = [
-        [
-            InlineKeyboardButton("Option 1", login_url=login_url),
-        ],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    update.message.reply_text(update.message.text, reply_markup=reply_markup)
+    update.message.reply_text(
+        "Checkout the menu to see how to interact with this bot.",
+    )
 
 
 def main() -> None:
-    global database
+    config = Config()
+    updater = Updater(config.telegram_token)
+    flask = create_app(config)
 
-    config = load_config()
-    database = Database(config["DATABASE_URI"])
-
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(config["TELEGRAM_TOKEN"])
-
-    # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
-
-    # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_command))
-
-    # register_handler = ConversationHandler(
-    #     entry_points=[CommandHandler('register', start)],
-    #     states={
-    #         GENDER: [MessageHandler(Filters.regex('^(Boy|Girl|Other)$'), gender)],
-    #         PHOTO: [MessageHandler(Filters.photo, photo), CommandHandler('skip', skip_photo)],
-    #         LOCATION: [
-    #             MessageHandler(Filters.location, location),
-    #             CommandHandler('skip', skip_location),
-    #         ],
-    #         BIO: [MessageHandler(Filters.text & ~Filters.command, bio)],
-    #     },
-    #     fallbacks=[CommandHandler('cancel', cancel)],
-    # )
-
-    # on non command i.e message - echo the message on Telegram
+    dispatcher.add_handler(CommandHandler("start", start_command))
+    dispatcher.add_handler(CommandHandler("connect", connect_command))
+    dispatcher.add_handler(CommandHandler("disconnect", disconnect_command))
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
 
-    # Start the Bot
-    updater.start_polling()
+    dispatcher.bot_data["flask"] = flask
+    dispatcher.bot_data["database"] = Database(config.database_uri)
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
+    bot = updater.bot
+    bot.set_my_commands(
+        commands=[
+            BotCommand("/connect", "Connect with your Toggl account"),
+            BotCommand("/disconnect", "Disconnect from your Toggl account"),
+        ],
+    )
+
+    updater.start_polling()
     updater.idle()
 
 

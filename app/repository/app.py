@@ -1,7 +1,7 @@
 from datetime import date
 from sqlalchemy.orm import Session
-from models.app import ScheduleException, Schedule
-from models.toggl import User, Workspace
+from app.models.app import ScheduleException, Schedule
+from app.models.toggl import User, Workspace
 
 
 class ScheduleRepository:

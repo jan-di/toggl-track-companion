@@ -1,16 +1,16 @@
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, BigInteger, Table
 from sqlalchemy.orm import relationship
-from util import Database
+from app.models.base import orm_base
 
 toggl_organization_member = Table(
     "toggl_organization_member",
-    Database.Base.metadata,
+    orm_base.metadata,
     Column("organization_id", ForeignKey("toggl_organization.id"), primary_key=True),
     Column("user_id", ForeignKey("toggl_user.id"), primary_key=True),
 )
 
 
-class User(Database.Base):
+class User(orm_base):
     __tablename__ = "toggl_user"
     id = Column(Integer, primary_key=True, autoincrement=False)
     fullname = Column(String, nullable=False)
@@ -24,20 +24,20 @@ class User(Database.Base):
     api_token = Column(String, nullable=False)
 
     app_user = relationship(
-        "models.app.User", back_populates="toggl_user", uselist=False
+        "app.models.app.User", back_populates="toggl_user", uselist=False
     )
     organizations = relationship(
-        "models.toggl.Organization",
+        "app.models.toggl.Organization",
         secondary=toggl_organization_member,
         back_populates="members",
     )
-    time_entries = relationship("models.toggl.TimeEntry", back_populates="user")
+    time_entries = relationship("app.models.toggl.TimeEntry", back_populates="user")
 
     def __repr__(self):
         return f"<User(id='{self.id}')>"
 
 
-class Organization(Database.Base):
+class Organization(orm_base):
     __tablename__ = "toggl_organization"
     id = Column(Integer, primary_key=True, autoincrement=False)
     name = Column(String, nullable=False)
@@ -46,17 +46,17 @@ class Organization(Database.Base):
     deleted_at = Column(DateTime)
 
     members = relationship(
-        "models.toggl.User",
+        "app.models.toggl.User",
         secondary=toggl_organization_member,
         back_populates="organizations",
     )
-    workspaces = relationship("models.toggl.Workspace", back_populates="organization")
+    workspaces = relationship("app.models.toggl.Workspace", back_populates="organization")
 
     def __repr__(self):
         return f"<Organization(id='{self.id}';name='{self.name}')>"
 
 
-class Workspace(Database.Base):
+class Workspace(orm_base):
     __tablename__ = "toggl_workspace"
     id = Column(Integer, primary_key=True, autoincrement=False)
     organization_id = Column(
@@ -68,15 +68,15 @@ class Workspace(Database.Base):
     logo_url = Column(String, nullable=False)
 
     organization = relationship(
-        "models.toggl.Organization", back_populates="workspaces"
+        "app.models.toggl.Organization", back_populates="workspaces"
     )
-    time_entries = relationship("models.toggl.TimeEntry", back_populates="workspace")
+    time_entries = relationship("app.models.toggl.TimeEntry", back_populates="workspace")
 
     def __repr__(self):
         return f"<Workspace(id='{self.id}';name='{self.name}')>"
 
 
-class TimeEntry(Database.Base):
+class TimeEntry(orm_base):
     __tablename__ = "toggl_time_entry"
     id = Column(BigInteger, primary_key=True, autoincrement=False)
     user_id = Column(Integer, ForeignKey("toggl_user.id"), nullable=False)
@@ -87,8 +87,8 @@ class TimeEntry(Database.Base):
     updated_at = Column(DateTime, nullable=False)
     server_deleted_at = Column(DateTime)
 
-    user = relationship("models.toggl.User", back_populates="time_entries")
-    workspace = relationship("models.toggl.Workspace", back_populates="time_entries")
+    user = relationship("app.models.toggl.User", back_populates="time_entries")
+    workspace = relationship("app.models.toggl.Workspace", back_populates="time_entries")
 
     def __repr__(self):
         return f"<TimeEntry(id='{self.id}')>"

@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
-from models.toggl import TimeEntry, User, Workspace
+from app.models.toggl import TimeEntry, User, Workspace
 
 
 class TimeEntryRepository:
