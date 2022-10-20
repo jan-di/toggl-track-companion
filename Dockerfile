@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.10.8 AS base
+FROM docker.io/library/python:3.11.0rc2 AS base
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1
