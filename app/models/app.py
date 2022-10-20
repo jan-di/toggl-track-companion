@@ -47,6 +47,8 @@ class Schedule(orm_base):
     day5 = Column(Integer, nullable=False)
     day6 = Column(Integer, nullable=False)
 
+    toggl_workspace = relationship("app.models.toggl.Workspace", uselist=False)
+
     def __repr__(self):
         return f"<Schedule(id='{self.id}')>"
 
@@ -63,6 +65,8 @@ class ScheduleException(orm_base):
     factor = Column(Float, nullable=False, default=1.0)
     addend = Column(Integer, nullable=False, default=0)
     description = Column(String)
+
+    toggl_workspace = relationship("app.models.toggl.Workspace", uselist=False)
 
     def __repr__(self):
         return f"<ScheduleException(id='{self.id}')>"

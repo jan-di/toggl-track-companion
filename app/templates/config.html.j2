@@ -1,0 +1,63 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+<h1>Config</h1>
+
+<h2>Schedules</h2>
+<table class="table">
+  <tr>
+    <th>Organization</th>
+    <th>Workspace</th>
+    <th>Start</th>
+    <th>End</th>
+    <th>Mon</th>
+    <th>Tue</th>
+    <th>Wed</th>
+    <th>Thu</th>
+    <th>Fri</th>
+    <th>Sat</th>
+    <th>Sun</th>
+  </tr>
+  
+  {% for schedule in schedules | sort(attribute='start', reverse = True) %}
+  <tr>
+    <td>{{ schedule.toggl_workspace.organization.name }}</td>
+    <td>{{ schedule.toggl_workspace.name }}</td>
+    <td>{{ schedule.start }}</td>
+    <td>{{ schedule.end }}</td>
+    <td>{{ schedule.day0 }}</td>
+    <td>{{ schedule.day1 }}</td>
+    <td>{{ schedule.day2 }}</td>
+    <td>{{ schedule.day3 }}</td>
+    <td>{{ schedule.day4 }}</td>
+    <td>{{ schedule.day5 }}</td>
+    <td>{{ schedule.day6 }}</td>
+  </tr>
+  {% endfor %}
+</table> 
+
+<h2>Schedule Exceptions</h2>
+<table class="table">
+  <tr>
+    <th>Organization</th>
+    <th>Workspace</th>
+    <th>Start</th>
+    <th>RRule</th>
+    <th>Factor</th>
+    <th>Addend</th>
+    <th>Description</th>
+  </tr>
+  
+  {% for schedule_exception in schedule_exceptions | sort(attribute='start', reverse = True) %}
+  <tr>
+    <td>{{ schedule_exception.toggl_workspace.organization.name }}</td>
+    <td>{{ schedule_exception.toggl_workspace.name }}</td>
+    <td>{{ schedule_exception.start }}</td>
+    <td>{{ schedule_exception.rrule }}</td>
+    <td>{{ schedule_exception.factor }}</td>
+    <td>{{ schedule_exception.addent }}</td>
+    <td>{{ schedule_exception.description }}</td>
+  </tr>
+  {% endfor %}
+</table> 
+{% endblock %}

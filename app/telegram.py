@@ -26,10 +26,14 @@ def create_or_update_user(session: Session, sender: dict) -> User:
 
 
 def validate_web_auth(token: str, params: dict[str]) -> bool:
+    params = params.copy()
     token_hash = hashlib.sha256(str.encode(token)).digest()
     check_hash = params["hash"]
 
-    params = params.copy()
+    for k in list(params.keys()):
+        if k.startswith("_"):
+            del params[k]
+
     params.pop("hash")
 
     compare_string = "\n".join(map(lambda key: f"{key}={params[key]}", sorted(params)))

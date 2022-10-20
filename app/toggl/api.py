@@ -28,19 +28,23 @@ class Api:
         data = req.json()
         return list(map(self.__create_workspace_from_api, data))
 
-    def get_time_entries(self, since=None):
+    def get_time_entries(self, since=None, start_date=None, end_date=None):
         params = {}
         if since is not None:
             params["since"] = since
+        if start_date is not None:
+            params["start_date"] = start_date
+        if end_date is not None:
+            params["end_date"] = end_date
 
         req = self.__request("GET", "/api/v9/me/time_entries", params)
         data = req.json()
         return list(map(self.__create_time_entry_from_api, data))
 
     def __request(
-        self, method: str, endpoint: str, params: dict[str, str] = None
+        self, method: str, endpoint: str, params: dict = None
     ) -> httpx.Request:
-        if params is not None:
+        if params is None:
             params = {}
 
         req = self.client.request(

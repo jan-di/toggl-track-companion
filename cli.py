@@ -19,24 +19,6 @@ def drop_schema():
 
 def init_test_data():  # to be removed
     with database.get_session() as session:
-        toggl_api = Api(config.toggl_token)
-        user = toggl_api.get_me()
-
-        user = session.merge(user)
-
-        # Fetch all organizations of the user
-        organizations = toggl_api.get_my_organizations()
-        organizations = list(map(session.merge, organizations))
-
-        # Update organization memberships for user
-        for org in organizations:
-            user.organizations.append(org)
-        session.merge(user)
-
-        # Fetch all workspaces of the user
-        workspaces = toggl_api.get_my_workspaces()
-        workspaces = list(map(session.merge, workspaces))
-
         schedule = Schedule(
             id=3,
             toggl_user_id=8393756,
