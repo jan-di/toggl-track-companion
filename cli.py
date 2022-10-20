@@ -1,7 +1,6 @@
 import sys
 from datetime import date, datetime
 
-from app.toggl import Api
 from app.util import Config, Database
 from app.models.app import Schedule, ScheduleException
 
