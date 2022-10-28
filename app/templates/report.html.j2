@@ -1,0 +1,35 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
+<h1>Report</h1>
+
+<pre>
+{{ blob }}
+</pre>
+
+<h2>Days</h2>
+<table class="table table-sm">
+    <tr>
+        <th>Date</th>
+        <th>Weekday</th>
+        <th>Time Entries</th>
+        <th>Target Time</th>
+        <th>Actual Time</th>
+        <th>Delta</th>
+        <th>Fullfillment Rate</th>
+    </tr>
+    {% for day in days.values() %}
+    <tr>
+        <td>{{ day.date }}</td>
+        <td>{{ day.date.weekday() }}</td>
+        <td>{{ day.time_entries }}</td>
+        <td>{{ day.target_time }}</td>
+        <td>{{ day.actual_time }}</td>
+        <td>{{ day.delta() }}</td>
+        <td>{{ day.fullfillment_rate() }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

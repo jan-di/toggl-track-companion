@@ -1,10 +1,11 @@
 from datetime import date
 from functools import wraps
-from flask import Flask, request, session, redirect, render_template, g
+from flask import Flask, request, session, redirect, render_template
 from app import telegram
 from app.models.app import Schedule, ScheduleException, User
 from app.toggl.api import Api
 from app.util import Config, Database
+from app.report import analyzer
 
 
 def require_auth(f):
@@ -87,5 +88,24 @@ def create_app(config: Config) -> Flask:
             schedules=schedules,
             schedule_exceptions=schedule_exceptions,
         )
+
+    @app.route("/report", methods=["POST", "GET"])
+    @require_auth
+    def report():
+
+        with database.get_session() as db:
+
+            user = db.query(User).get(session["user_id"])
+            if user.toggl_user is not None:
+
+                blob, days, weeks = analyzer.analyze(
+                    session=db, user=user, toggl_user=user.toggl_user
+                )
+
+                return render_template(
+                    "report.html.j2", blob=blob, days=days, weeks=weeks
+                )
+            else:
+                return "lol"
 
     return app
