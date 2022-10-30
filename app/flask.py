@@ -1,4 +1,5 @@
 from datetime import date
+import decimal
 from functools import wraps
 from flask import Flask, request, session, redirect, render_template
 from app import telegram
@@ -98,14 +99,31 @@ def create_app(config: Config) -> Flask:
             user = db.query(User).get(session["user_id"])
             if user.toggl_user is not None:
 
-                blob, days, weeks = analyzer.analyze(
+                text_report, report = analyzer.analyze(
                     session=db, user=user, toggl_user=user.toggl_user
                 )
 
                 return render_template(
-                    "report.html.j2", blob=blob, days=days, weeks=weeks
+                    "report.html.j2", text_report=text_report, report=report
                 )
             else:
                 return "lol"
+
+    @app.template_filter()
+    def format_percentage(number: float, precision: int = 2):
+        if number is None:
+            return "---%"
+        return f"{round(float(number) * 100, precision)}%"
+
+    @app.template_filter()
+    def format_time(total_seconds: int):
+        minutes, seconds = divmod(abs(total_seconds), 60)
+        hours, minutes = divmod(minutes, 60)
+
+        result = f"{hours:02}:{minutes:02}:{seconds:02}"
+        muted_length = len(result) - len(result.lstrip(":0"))
+        if muted_length > 0:
+            result = f'{"-" if total_seconds < 0 else ""}<span class="text-muted">{result[:muted_length]}</span>{result[muted_length:]}'
+        return result
 
     return app

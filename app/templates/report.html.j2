@@ -2,11 +2,83 @@
 
 {% block content %}
 
-<h1>Report</h1>
+<h1>Text Report</h1>
 
 <pre>
-{{ blob }}
+{{ text_report }}
 </pre>
+
+<h2>Quarters</h2>
+<table class="table table-sm">
+    <tr>
+        <th>Year</th>
+        <th>Quarter</th>
+        <th>Days</th>
+        <th>Target Time</th>
+        <th>Actual Time</th>
+        <th>Delta</th>
+        <th>Fullfillment Rate</th>
+    </tr>
+    {% for quarter in report.quarters.values() %}
+    <tr>
+        <td>{{ quarter.year }}</td>
+        <td>{{ quarter.quarter }}</td>
+        <td>{{ quarter.days_with_actual_time() }}/{{ quarter.days_with_target_time() }} ({{ quarter.days | length }}/{{ quarter.max_days }})</td>
+        <td>{{ quarter.target_time() | format_time }}</td>
+        <td>{{ quarter.actual_time() | format_time }}</td>
+        <td>{{ quarter.delta() | format_time }}</td>
+        <td>{{ quarter.fullfillment_rate() | format_percentage }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Months</h2>
+<table class="table table-sm">
+    <tr>
+        <th>Year</th>
+        <th>Month</th>
+        <th>Days</th>
+        <th>Target Time</th>
+        <th>Actual Time</th>
+        <th>Delta</th>
+        <th>Fullfillment Rate</th>
+    </tr>
+    {% for month in report.months.values() %}
+    <tr>
+        <td>{{ month.year }}</td>
+        <td>{{ month.month }}</td>
+        <td>{{ month.days_with_actual_time() }}/{{ month.days_with_target_time() }} ({{ month.days | length }}/{{ month.max_days }})</td>
+        <td>{{ month.target_time() | format_time }}</td>
+        <td>{{ month.actual_time() | format_time }}</td>
+        <td>{{ month.delta() | format_time }}</td>
+        <td>{{ month.fullfillment_rate() | format_percentage }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h2>Weeks</h2>
+<table class="table table-sm">
+    <tr>
+        <th>Year</th>
+        <th>Week</th>
+        <th>Days</th>
+        <th>Target Time</th>
+        <th>Actual Time</th>
+        <th>Delta</th>
+        <th>Fullfillment Rate</th>
+    </tr>
+    {% for week in report.weeks.values() %}
+    <tr>
+        <td>{{ week.year }}</td>
+        <td>{{ week.week }}</td>
+        <td>{{ week.days_with_actual_time() }}/{{ week.days_with_target_time() }} ({{ week.days | length }}/{{ week.max_days }})</td>
+        <td>{{ week.target_time() | format_time }}</td>
+        <td>{{ week.actual_time() | format_time }}</td>
+        <td>{{ week.delta() | format_time }}</td>
+        <td>{{ week.fullfillment_rate() | format_percentage }}</td>
+    </tr>
+    {% endfor %}
+</table>
 
 <h2>Days</h2>
 <table class="table table-sm">
@@ -19,15 +91,15 @@
         <th>Delta</th>
         <th>Fullfillment Rate</th>
     </tr>
-    {% for day in days.values() %}
+    {% for day in report.days.values() %}
     <tr>
         <td>{{ day.date }}</td>
         <td>{{ day.date.weekday() }}</td>
         <td>{{ day.time_entries }}</td>
-        <td>{{ day.target_time }}</td>
-        <td>{{ day.actual_time }}</td>
-        <td>{{ day.delta() }}</td>
-        <td>{{ day.fullfillment_rate() }}</td>
+        <td>{{ day.target_time | format_time }}</td>
+        <td>{{ day.actual_time | format_time }}</td>
+        <td>{{ day.delta() | format_time }}</td>
+        <td>{{ day.fullfillment_rate() | format_percentage }}</td>
     </tr>
     {% endfor %}
 </table>
