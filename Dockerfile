@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.10.8
+FROM docker.io/library/python:3.11.1
 
 COPY requirements.txt ./
 
