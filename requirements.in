@@ -1,7 +1,7 @@
 python-telegram-bot~=13.14
 psycopg2~=2.9
 SQLAlchemy~=1.4
-python-dotenv~=0.21
+python-dotenv~=1.0
 httpx~=0.23
 python-dateutil~=2.8
 flask~=2.2

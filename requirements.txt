@@ -51,7 +51,7 @@ pycparser==2.21
     # via cffi
 python-dateutil==2.8.2
     # via -r requirements.in
-python-dotenv==0.21.0
+python-dotenv==1.0.0
     # via -r requirements.in
 python-telegram-bot==13.14
     # via -r requirements.in
