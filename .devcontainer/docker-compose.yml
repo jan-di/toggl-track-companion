@@ -20,7 +20,7 @@ services:
     command: sleep infinity
 
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    network_mode: service:db
+    network_mode: service:mongodb
     # Uncomment the next line to use a non-root user for all processes.
     # user: vscode
 
@@ -39,5 +39,20 @@ services:
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    volumes:
+      - mongodb-data:/data/db
+    # Uncomment to change startup options
+    # environment:
+    #  MONGO_INITDB_ROOT_USERNAME: root
+    #  MONGO_INITDB_ROOT_PASSWORD: example
+    #  MONGO_INITDB_DATABASE: your-database-here
+
+    # Add "forwardPorts": ["27017"] to **devcontainer.json** to forward MongoDB locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
 volumes:
   postgres-data: null
+  mongodb-data: null

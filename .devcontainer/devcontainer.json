@@ -39,7 +39,8 @@
 	// This can be used to network with other containers or the host.
 	"forwardPorts": [
 		5000,
-		5432
+		5432,
+		27017
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "pip-sync",
