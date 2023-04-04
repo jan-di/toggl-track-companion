@@ -1,7 +1,5 @@
 # import re
-# from icalendar import Calendar
-# import httpx
-
+  
 from threading import Event
 import logging
 import signal
@@ -9,6 +7,7 @@ import signal
 from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
+from src.schedule import CalendarSync
 
 
 def main():
@@ -26,16 +25,24 @@ def main():
     for signal_string in exit_signals.values():
         signal.signal(getattr(signal, signal_string), exit_loop)
 
+    calendar_sync = CalendarSync()
     while not exit_event.is_set():
-        cycle()
+        cycle(calendar_sync)
         exit_event.wait(5)
 
     database.disconnect()
     logging.info("Exit")
 
 
-def cycle():
-    pass
+def cycle(calendar_sync):
+    logging.info("Start sync cycle")
+
+    users = calendar_sync.get_users_to_sync()
+    logging.info("Found %i users to sync", len(users))
+
+    for user in users:
+        for calendar in user.calendars:
+            calendar_sync.sync_calendar(calendar)
 
 
 if __name__ == "__main__":
@@ -44,15 +51,6 @@ if __name__ == "__main__":
 # ================================================
 
 # pattern = re.compile(r"^(?:<span>)*ttr-(schedule|event)((?::\w+=\w+)+)(?:</span>)*$")
-
-# url = "x"
-# cal = httpx.get(url, timeout=20)
-
-# gcal = Calendar.from_ical(cal.content)
-
-
-# connect(host="mongodb://mongodb:27017")
-
 
 # def sync_calendar(user_id=1, organization_id=1, workspace_id=1):
 #     schedule_list = Schedule.objects(
