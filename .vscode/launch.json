@@ -37,6 +37,14 @@
             "program": "bot.py",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Updater",
+            "type": "python",
+            "request": "launch",
+            "program": "updater.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
     ]
 }

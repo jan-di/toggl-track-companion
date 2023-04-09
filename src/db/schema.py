@@ -9,7 +9,7 @@ from mongoengine import (
 )
 
 
-class Calendar(EmbeddedDocument):
+class UserCalendar(EmbeddedDocument):
     url = StringField()
     user_id = IntField(required=True)
     organization_id = IntField(required=True)
@@ -19,7 +19,7 @@ class Calendar(EmbeddedDocument):
 class User(Document):
     name = StringField(required=True)
     username = StringField()
-    calendars = ListField(EmbeddedDocumentField(Calendar))
+    calendars = ListField(EmbeddedDocumentField(UserCalendar))
 
 
 class Schedule(Document):
