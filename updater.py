@@ -40,7 +40,19 @@ def cycle(calendar_sync):
 
     for user in users:
         for calendar in user.calendars:
-            calendar_sync.sync_calendar(calendar)
+            stats = calendar_sync.sync_calendar(calendar)
+            logging.info(
+                "Synced calendar %i/%i/%i [Schedules C:%i, U:%i, D:%i, Events C:%i, U:%i, D:%i]",
+                calendar.user_id,
+                calendar.organization_id,
+                calendar.workspace_id,
+                stats['schedules_created'],
+                stats['schedules_updated'],
+                stats['schedules_deleted'],
+                stats['events_created'],
+                stats['events_updated'],
+                stats['events_deleted'],
+            )
 
 
 if __name__ == "__main__":

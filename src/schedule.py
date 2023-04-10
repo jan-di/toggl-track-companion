@@ -15,10 +15,17 @@ class CalendarSync:
     def sync_calendar(self, user_calendar: UserCalendar) -> None:
         ical = self._fetch_calendar(user_calendar.url)
 
+        # prepare schedules
         schedules = self._get_existing_documents_with_uid(Schedule, user_calendar)
         synced_schedule_uids = set()
+        schedules_created = 0
+        schedules_updated = 0
+
+        # prepare events
         events = self._get_existing_documents_with_uid(Event, user_calendar)
         synced_event_uids = set()
+        events_created = 0
+        events_updated = 0
 
         for component in ical.walk():
             if component.name == "VEVENT":
@@ -32,16 +39,27 @@ class CalendarSync:
                         key_value = part.split("=", 1)
                         annotation_options[key_value[0]] = key_value[1]
 
+                    # schedules
                     if annotation_type == "schedule":
-                        schedule = self._create_or_update_schedule(
+                        schedule, created = self._create_or_update_schedule(
                             schedules, component, annotation_options, user_calendar
                         )
+                        if created:
+                            schedules_created += 1
+                        else:
+                            schedules_updated += 1
                         synced_schedule_uids.add(schedule.source_uid)
                         schedule.save()
+
+                    # events
                     elif annotation_type == "event":
-                        event = self._create_or_update_event(
+                        event, created = self._create_or_update_event(
                             events, component, annotation_options, user_calendar
                         )
+                        if created:
+                            events_created += 1
+                        else:
+                            events_updated += 1
                         synced_event_uids.add(event.source_uid)
                         event.save()
 
@@ -50,10 +68,19 @@ class CalendarSync:
         for schedule_uid in schedules_to_delete:
             schedules[schedule_uid].delete()
 
-        # delete event
+        # delete events
         events_to_delete = set(events.keys()).difference(synced_event_uids)
         for event_uid in events_to_delete:
             events[event_uid].delete()
+
+        return {
+            "schedules_created": schedules_created,
+            "schedules_updated": schedules_updated,
+            "schedules_deleted": len(schedules_to_delete),
+            "events_created": events_created,
+            "events_updated": events_updated,
+            "events_deleted": len(events_to_delete),
+        }
 
     def _get_existing_documents_with_uid(
         self, document_cls, user_calendar: UserCalendar
@@ -73,7 +100,8 @@ class CalendarSync:
     def _create_or_update_schedule(
         self, schedules, component, annotation_options, user_calendar: UserCalendar
     ):
-        if component["UID"] not in schedules:
+        created = component["UID"] not in schedules
+        if created:
             schedule = Schedule()
             schedule.source_uid = component["UID"]
             schedule.user_id = user_calendar.user_id
@@ -90,12 +118,13 @@ class CalendarSync:
         else:
             schedule.rrule = None
 
-        return schedule
+        return schedule, created
 
     def _create_or_update_event(
         self, events, component, annotation_options, user_calendar: UserCalendar
     ):
-        if component["UID"] not in events:
+        created = component["UID"] not in events
+        if created:
             event = Event()
             event.source_uid = component["UID"]
             event.user_id = user_calendar.user_id
@@ -113,7 +142,7 @@ class CalendarSync:
         else:
             event.rrule = None
 
-        return event
+        return event, created
 
     def _fetch_calendar(self, url: str) -> Calendar:
         ics = httpx.get(url, timeout=20)
