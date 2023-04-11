@@ -10,7 +10,7 @@ class Config:
             **os.environ,
         }
 
-        # self.telegram_token = values.get("TELEGRAM_TOKEN")
+        self.telegram_token = values.get("TELEGRAM_TOKEN")
         self.database_uri = values.get("DATABASE_URI")
         # self.server_name = values.get("SERVER_NAME")
         # self.session_secret = values.get("SESSION_SECRET")

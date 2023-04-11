@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from threading import Event
 import logging
 import signal
@@ -12,6 +14,8 @@ def main():
     Log()
     config = Config()
     database = Database(config.database_uri)
+
+    logging.info("Starting updater..")
 
     exit_event = Event()
     exit_signals = {1: "SIGHUP", 2: "SIGINT", 15: "SIGTERM"}
@@ -29,7 +33,7 @@ def main():
         exit_event.wait(5)
 
     database.disconnect()
-    logging.info("Exit")
+    logging.info("Exiting updater..")
 
 
 def cycle(calendar_sync):
@@ -46,12 +50,12 @@ def cycle(calendar_sync):
                 calendar.user_id,
                 calendar.organization_id,
                 calendar.workspace_id,
-                stats['schedules_created'],
-                stats['schedules_updated'],
-                stats['schedules_deleted'],
-                stats['events_created'],
-                stats['events_updated'],
-                stats['events_deleted'],
+                stats["schedules_created"],
+                stats["schedules_updated"],
+                stats["schedules_deleted"],
+                stats["events_created"],
+                stats["events_updated"],
+                stats["events_deleted"],
             )
 
 

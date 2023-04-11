@@ -14,3 +14,4 @@ class Database:
 
     def disconnect(self):
         disconnect()
+        logging.debug("Disconnected database")
