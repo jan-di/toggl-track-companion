@@ -2,10 +2,13 @@ import hashlib
 import hmac
 from os import path
 from functools import wraps
-from flask import Flask, session, request, redirect
+from flask import Flask, session, request, redirect, render_template, url_for
+
 
 class FlaskApp:
-    def __init__(self, server_name: str, session_secret: str, root_dir: str, telegram_token: str):
+    def __init__(
+        self, server_name: str, session_secret: str, root_dir: str, telegram_token: str
+    ):
         app = Flask(
             __name__,
             static_folder=path.join(root_dir, "static"),
@@ -15,6 +18,15 @@ class FlaskApp:
 
         @app.route("/health")
         def route_health():
+            return "ok", 200
+
+        @app.route("/login")
+        def route_login():
+            return render_template("login.html.j2")
+
+        @app.route("/logout")
+        def route_logout():
+            session.clear()
             return "ok", 200
 
         @app.route("/auth")
@@ -32,7 +44,7 @@ class FlaskApp:
         @app.route("/profile")
         @self.require_auth
         def route_profile():
-            return "yeah", 200
+            return render_template("profile.html.j2")
 
         self.app = app
         self.telegram_token = telegram_token
@@ -49,7 +61,10 @@ class FlaskApp:
         @wraps(func)
         def decorated_function(*args, **kwargs):
             if "user_id" not in session or session["user_id"] is None:
-                return "not authenticated", 401
+                return (
+                    f'not authenticated. <a href="{ url_for("route_login")}">login</a>',
+                    401,
+                )
             return func(*args, **kwargs)
 
         return decorated_function
@@ -65,7 +80,9 @@ class FlaskApp:
 
         params.pop("hash")
 
-        compare_string = "\n".join(map(lambda key: f"{key}={params[key]}", sorted(params)))
+        compare_string = "\n".join(
+            map(lambda key: f"{key}={params[key]}", sorted(params))
+        )
         compare_hash = hmac.new(
             token_hash, str.encode(compare_string), hashlib.sha256
         ).hexdigest()

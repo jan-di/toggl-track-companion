@@ -64,7 +64,4 @@ class TelegramBot:
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        update.message.reply_text(
-            "Open user profile", reply_markup=reply_markup
-        )
-
+        update.message.reply_text("Open user profile", reply_markup=reply_markup)
