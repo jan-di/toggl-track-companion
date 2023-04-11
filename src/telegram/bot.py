@@ -18,6 +18,7 @@ from telegram.ext import (
 
 from src.db.database import Database
 from src.web import FlaskApp
+from src.db.schema import User
 
 
 class TelegramBot:
@@ -54,6 +55,8 @@ class TelegramBot:
         update.message.reply_markdown_v2(rf"Hi {user.mention_markdown_v2()}\!")
 
     def _profile_command(self, update: Update, context: CallbackContext) -> None:
+        user = self._create_or_update_user(update.effective_user)
+
         with context.bot_data["flask"].get_context():
             login_url = LoginUrl(
                 url_for("route_auth", _scheme="https", _next="profile")
@@ -65,3 +68,22 @@ class TelegramBot:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text("Open user profile", reply_markup=reply_markup)
+
+    def _create_or_update_user(self, sender: dict) -> User:
+        user = User.objects(telegram_id=sender.id)
+
+        if not user:
+            user = User()
+            user.telegram_id = sender.id
+        #     user = User(sender["id"])
+        #     user.enabled = None
+        #     user.start = None
+
+        user.name = f"{sender['first_name']} {sender['last_name'] if sender['last_name'] is not None else '' }".strip()
+        # user.username = sender["username"]
+        # user.language_code = sender["language_code"]
+
+        user.save()
+
+        return user
+

@@ -18,6 +18,7 @@ class UserCalendar(EmbeddedDocument):
 
 
 class User(Document):
+    telegram_id = IntField(required=True)
     name = StringField(required=True)
     username = StringField()
     calendars = ListField(EmbeddedDocumentField(UserCalendar))
