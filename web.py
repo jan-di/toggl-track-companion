@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import logging
+from os import path
 
 from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
-from src.web.flask import FlaskApp
+from src.web import FlaskApp
 
 
 def main() -> None:
@@ -15,7 +16,8 @@ def main() -> None:
 
     logging.info("Starting web..")
 
-    app = FlaskApp(config.server_name, config.session_secret)
+    script_dir = path.dirname(path.realpath(__file__))
+    app = FlaskApp(config.server_name, config.session_secret, script_dir, config.telegram_token)
 
     app.run()
 

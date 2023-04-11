@@ -1,5 +1,4 @@
 from datetime import date
-import decimal
 from functools import wraps
 from flask import Flask, request, session, redirect, render_template
 from app import telegram
@@ -9,33 +8,33 @@ from app.util import Config, Database
 from app.report import analyzer
 
 
-def require_auth(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user_id" not in session or session["user_id"] is None:
-            return "not authenticated", 401
-        return f(*args, **kwargs)
+# def require_auth(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         if "user_id" not in session or session["user_id"] is None:
+#             return "not authenticated", 401
+#         return f(*args, **kwargs)
 
-    return decorated_function
+#     return decorated_function
 
 
 def create_app(config: Config) -> Flask:
-    app = Flask(__name__)
-    app.config.update(SERVER_NAME=config.server_name, SECRET_KEY=config.session_secret)
+    # app = Flask(__name__)
+    # app.config.update(SERVER_NAME=config.server_name, SECRET_KEY=config.session_secret)
 
-    database = Database(config.database_uri)
+    # database = Database(config.database_uri)
 
-    @app.route("/auth")
-    def auth():
-        auth_valid = telegram.validate_web_auth(
-            config.telegram_token, request.args.to_dict()
-        )
-        if auth_valid:
-            session["user_id"] = request.args["id"]
-        else:
-            return "authentication invalid", 401
+    # @app.route("/auth")
+    # def auth():
+    #     auth_valid = telegram.validate_web_auth(
+    #         config.telegram_token, request.args.to_dict()
+    #     )
+    #     if auth_valid:
+    #         session["user_id"] = request.args["id"]
+    #     else:
+    #         return "authentication invalid", 401
 
-        return redirect(request.args["_next"], code=302)
+    #     return redirect(request.args["_next"], code=302)
 
     @app.route("/connect", methods=["POST", "GET"])
     @require_auth
