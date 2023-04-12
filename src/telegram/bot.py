@@ -28,7 +28,10 @@ class TelegramBot:
 
         self.dispatcher.add_handler(CommandHandler("start", self._start_command))
         self.dispatcher.add_handler(CommandHandler("profile", self._profile_command))
-        # dispatcher.add_handler(CommandHandler("disconnect", disconnect_command))
+        self.dispatcher.add_handler(CommandHandler("connect", self._connect_command))
+        self.dispatcher.add_handler(
+            CommandHandler("disconnect", self._disconnect_command)
+        )
         # dispatcher.add_handler(CommandHandler("fetch", fetch_command))
         # dispatcher.add_handler(CommandHandler("analyze", analyze_command))
         # dispatcher.add_handler(CommandHandler("preferences", preferences_command))
@@ -43,6 +46,8 @@ class TelegramBot:
         self.bot.set_my_commands(
             commands=[
                 BotCommand("/profile", "Open your profile page"),
+                BotCommand("/connect", "Connect with a toggl track account"),
+                BotCommand("/disconnect", "Disconnect toggl track account"),
             ],
         )
 
@@ -57,17 +62,22 @@ class TelegramBot:
     def _profile_command(self, update: Update, context: CallbackContext) -> None:
         user = self._create_or_update_user(update.effective_user)
 
-        with context.bot_data["flask"].get_context():
-            login_url = LoginUrl(
-                url_for("route_auth", _scheme="https", _next="profile")
-            )
-        keyboard = [
-            [
-                InlineKeyboardButton("Open profile page", login_url=login_url),
-            ],
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup = self._create_auth_reply_markup(
+            context, "Open user profile", "profile"
+        )
         update.message.reply_text("Open user profile", reply_markup=reply_markup)
+
+    def _connect_command(self, update: Update, context: CallbackContext) -> None:
+        reply_markup = self._create_auth_reply_markup(
+            context, "Connect with Toggl Track", "connect"
+        )
+        update.message.reply_text(
+            "To connect with your toggl track account, open the connection wizard.",
+            reply_markup=reply_markup,
+        )
+
+    def _disconnect_command(self, update: Update, context: CallbackContext) -> None:
+        pass
 
     def _create_or_update_user(self, sender: dict) -> User:
         user = User.objects.get(telegram_id=sender.id)
@@ -82,3 +92,15 @@ class TelegramBot:
         user.save()
 
         return user
+
+    def _create_auth_reply_markup(
+        self, context: CallbackContext, button_text: str, next_url: str
+    ):
+        with context.bot_data["flask"].get_context():
+            login_url = LoginUrl(url_for("route_auth", _scheme="https", _next=next_url))
+        keyboard = [
+            [
+                InlineKeyboardButton(button_text, login_url=login_url),
+            ],
+        ]
+        return InlineKeyboardMarkup(keyboard)

@@ -30,6 +30,35 @@ class FlaskApp:
             session.clear()
             return "ok", 200
 
+        @app.route("/connect", methods=["POST", "GET"])
+        @self.require_auth
+        def route_connect():
+            if request.method == "GET":
+                return render_template("connect.html.j2")
+
+            elif request.method == "POST":
+                pass
+                # toggl_api = Api(request.form.get("apitoken"))
+                # toggl_user = toggl_api.get_me()
+
+                # if toggl_user is not None:
+                #     with database.get_session() as db:
+
+                #         db.merge(toggl_user)
+
+                #         user = db.query(User).get(session["user_id"])
+                #         user.toggl_user_id = toggl_user.id
+                #         user.start = date.today()
+                #         user.enabled = True
+
+                #         db.commit()
+                #         db.flush()
+
+                #     return "success. you can return to telegram now."
+
+                # will never be reached, as request will crash lol
+                # return "api token invalid"
+
         @app.route("/auth")
         def route_auth():
             auth_valid = self.validate_web_auth(

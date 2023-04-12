@@ -1,6 +1,12 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
 <form method="post">
   <label for="fname">API Token:</label><br>
   <input type="text" id="apitoken" name="apitoken" value=""><br>
 
   <input type="submit" value="Submit">
 </form> 
+
+{% endblock content %}
