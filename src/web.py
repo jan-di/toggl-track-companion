@@ -3,6 +3,7 @@ import hmac
 from os import path
 from functools import wraps
 from flask import Flask, session, request, redirect, render_template, url_for
+from src.db.schema import User
 
 
 class FlaskApp:
@@ -44,7 +45,9 @@ class FlaskApp:
         @app.route("/profile")
         @self.require_auth
         def route_profile():
-            return render_template("profile.html.j2")
+            user = User.objects.get(telegram_id=session["user_id"])
+
+            return render_template("profile.html.j2", user=user)
 
         self.app = app
         self.telegram_token = telegram_token
