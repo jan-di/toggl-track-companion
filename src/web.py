@@ -3,7 +3,9 @@ import hmac
 from os import path
 from functools import wraps
 from flask import Flask, session, request, redirect, render_template, url_for
+
 from src.db.schema import User
+from src.toggl import TogglApi
 
 
 class FlaskApp:
@@ -37,9 +39,13 @@ class FlaskApp:
                 return render_template("connect.html.j2")
 
             elif request.method == "POST":
-                pass
-                # toggl_api = Api(request.form.get("apitoken"))
-                # toggl_user = toggl_api.get_me()
+                toggl_api = TogglApi(request.form.get("apitoken"))
+                success, toggl_user = toggl_api.get_me()
+
+                if not success:
+                    return "api token invalid", 400
+                else:
+                    print(toggl_user)
 
                 # if toggl_user is not None:
                 #     with database.get_session() as db:
