@@ -1,1 +1,1 @@
-# toggl-robot
+# Toggl Companion

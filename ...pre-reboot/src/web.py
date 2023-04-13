@@ -45,25 +45,15 @@ class FlaskApp:
                 if not success:
                     return "api token invalid", 400
                 else:
-                    print(toggl_user)
+                    user = User.objects.get(telegram_id=session["user_id"])
 
-                # if toggl_user is not None:
-                #     with database.get_session() as db:
+                    user.toggl_id = toggl_user["id"]
+                    user.toggl_name = toggl_user["fullname"]
+                    user.toggl_image_url = toggl_user["image_url"]
 
-                #         db.merge(toggl_user)
+                    user.save()
 
-                #         user = db.query(User).get(session["user_id"])
-                #         user.toggl_user_id = toggl_user.id
-                #         user.start = date.today()
-                #         user.enabled = True
-
-                #         db.commit()
-                #         db.flush()
-
-                #     return "success. you can return to telegram now."
-
-                # will never be reached, as request will crash lol
-                # return "api token invalid"
+                    return "toggl account connected"
 
         @app.route("/auth")
         def route_auth():

@@ -21,6 +21,10 @@ class User(Document):
     telegram_id = IntField(required=True)
     telegram_name = StringField(required=True)
     telegram_username = StringField()
+    toggl_id = IntField()
+    toggl_name = StringField()
+    toggl_email = StringField()
+    toggl_image_url = StringField()
     calendars = ListField(EmbeddedDocumentField(UserCalendar))
 
 
