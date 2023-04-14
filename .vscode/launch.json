@@ -7,9 +7,7 @@
         {
             "name": "All",
             "configurations": [
-                "Web",
-                "Bot",
-                "Updater"
+                "Web"
             ],
             "stopAll": true
         }
@@ -28,22 +26,6 @@
             "type": "python",
             "request": "launch",
             "program": "web.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Bot",
-            "type": "python",
-            "request": "launch",
-            "program": "bot.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
-            "name": "Updater",
-            "type": "python",
-            "request": "launch",
-            "program": "updater.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }

@@ -1,0 +1,27 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
+{% if error_msg %}
+<div class="alert alert-warning" role="alert">
+  {{ error_msg }}
+</div>
+{% endif %}
+
+<p>Login with toggl track credentials:</p>
+
+<form method="POST">
+  <div class="form-outline mb-4">
+    <input name="username" type="email" id="form2Example1" class="form-control" />
+    <label class="form-label" for="form2Example1">Email address</label>
+  </div>
+
+  <div class="form-outline mb-4">
+    <input name="password" type="password" id="form2Example2" class="form-control" />
+    <label class="form-label" for="form2Example2">Password</label>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+</form>
+
+{% endblock content %}

@@ -4,18 +4,20 @@ import httpx
 class TogglApi:
     def __init__(
         self,
-        api_token,
-        base_url="https://api.track.toggl.com",
+        api_token: str = None,
+        username: str = None,
+        password: str = None,
+        base_url: str = "https://api.track.toggl.com",
     ):
         self.api_token = api_token
+        self.username = username
+        self.password = password
         self.base_url = base_url
         self.client = httpx.Client()
 
-    def get_me(self) -> dict:
+    def get_me(self) -> tuple[bool, any, int]:
         req = self.__request("GET", "/api/v9/me")
-        success = req.status_code < 300
-        data = req.json() if success else None
-        return success, data
+        return self.__response(req)
 
     # def get_my_organizations(self) -> list[Organization]:
     #     req = self.__request("GET", "/api/v9/me/organizations")
@@ -46,14 +48,31 @@ class TogglApi:
         if params is None:
             params = {}
 
+        if self.api_token:
+            auth = (self.api_token, "api_token")
+        else:
+            auth = (self.username, self.password)
+
         req = self.client.request(
             method=method,
             params=params,
             url=f"{self.base_url}{endpoint}",
-            auth=(self.api_token, "api_token"),
+            auth=auth,
         )
 
         return req
+
+    def __response(self, request: httpx.Request) -> tuple[bool, any, int]:
+        success = request.status_code < 300
+        if success and request.headers.get("content-type").lower().startswith(
+            "application/json"
+        ):
+            data = request.json()
+        else:
+            data = request.text
+        status = request.status_code
+
+        return success, data, status
 
     # def __create_user_from_api(self, data: map) -> User:
     #     return User(

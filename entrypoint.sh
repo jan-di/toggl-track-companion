@@ -2,12 +2,6 @@
 
 component=$1
 
-start_bot () {
-  echo "Start Bot"
-
-  python3 bot.py
-}
-
 start_web () {
   echo "Start Web"
 
@@ -19,9 +13,6 @@ unknown () {
 }
 
 case "$component" in
-    bot)
-        start_bot
-        ;;
     web)
         start_web
         ;;

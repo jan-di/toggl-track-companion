@@ -1,5 +1,9 @@
 {
     "python.linting.pylintArgs": [
         "--load-plugins=pylint_mongoengine"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
 }
