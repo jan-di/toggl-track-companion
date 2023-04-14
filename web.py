@@ -5,6 +5,7 @@ from os import path
 from src.web import FlaskApp
 from src.util.config import Config
 from src.util.log import Log
+from src.db.database import Database
 
 
 def main() -> None:
@@ -14,10 +15,12 @@ def main() -> None:
 
     script_dir = path.dirname(path.realpath(__file__))
     config = Config(path.join(script_dir, ".env"))
+    Database.connect(config.database_uri)
 
     app = FlaskApp(config.server_name, config.session_secret, script_dir)
     app.run()
 
+    Database.disconnect()
     logger.info("Exiting web..")
 
 
