@@ -22,4 +22,5 @@ class User(Document):
     name = StringField(required=True)
     email = StringField(required=True)
     image_url = StringField()
+    api_token = StringField(required=True)
     # calendars = ListField(EmbeddedDocumentField(UserCalendar))

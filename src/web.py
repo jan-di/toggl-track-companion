@@ -44,6 +44,7 @@ class FlaskApp:
                     user.name = toggl_user["fullname"]
                     user.email = toggl_user["email"]
                     user.image_url = toggl_user["image_url"]
+                    user.api_token = toggl_user["api_token"]
 
                     user.save()
 
