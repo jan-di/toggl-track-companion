@@ -23,19 +23,24 @@
                     <a class="nav-link" href="#">Link</a>
                     </li>
                     <li class="nav-item">
-                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-                    </li>
-                    #}
+                    <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">{{ session.user_id }}</a>
+                    </li>#}
+                    
                 </ul>
-                <form class="d-flex">
-                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success" type="submit">Search</button>
+                {% if 'user_id' in session %}
+                <form class="d-flex text-light">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <span>Logged in as <a class="nav-link active d-inline" href="{{ url_for('profile') }}" tabindex="-1" aria-disabled="true">{{ session.user_id }}</a></span>
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-success">Logout</a>
                 </form>
+                {% endif %}
                 </div>
             </div>
         </nav>
         <main class="container">
-            {% if 'user_id' in session %}<p>Logged in as user {{ session.user_id }}. <a href="{{ url_for('logout') }}">Logout</a>.</p>{% endif %}
             {% block content %} {% endblock %}
             <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
         </main>
