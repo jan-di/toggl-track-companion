@@ -1,4 +1,8 @@
+from datetime import datetime
+
 import httpx
+from mongoengine import DoesNotExist
+from src.db.schema import User, Organization, Workspace
 
 
 class TogglApi:
@@ -19,15 +23,13 @@ class TogglApi:
         req = self.__request("GET", "/api/v9/me")
         return self.__response(req)
 
-    # def get_my_organizations(self) -> list[Organization]:
-    #     req = self.__request("GET", "/api/v9/me/organizations")
-    #     data = req.json()
-    #     return list(map(self.__create_organization_from_api, data))
+    def get_my_organizations(self) -> tuple[bool, any, int]:
+        req = self.__request("GET", "/api/v9/me/organizations")
+        return self.__response(req)
 
-    # def get_my_workspaces(self) -> list[Workspace]:
-    #     req = self.__request("GET", "/api/v9/me/all_workspaces")
-    #     data = req.json()
-    #     return list(map(self.__create_workspace_from_api, data))
+    def get_my_workspaces(self) -> tuple[bool, any, int]:
+        req = self.__request("GET", "/api/v9/me/all_workspaces")
+        return self.__response(req)
 
     # def get_time_entries(self, since=None, start_date=None, end_date=None):
     #     params = {}
@@ -117,3 +119,51 @@ class TogglApi:
     #         user_id=data["user_id"],
     #         workspace_id=data["workspace_id"],
     #     )
+
+
+class TogglUpdater:
+    def create_or_update_user(self, user_data: dict) -> User:
+        try:
+            user = User.objects.get(user_id=user_data["id"])
+        except DoesNotExist:
+            user = User()
+            user.user_id = user_data["id"]
+        
+        user.name = user_data["fullname"]
+        user.email = user_data["email"]
+        user.image_url = user_data["image_url"]
+        user.api_token = user_data["api_token"]
+
+        user.save()
+
+        return user
+
+    def create_or_update_organization(self, organization_data: dict) -> Organization:
+        try:
+            organization = Organization.objects.get(
+                organization_id=organization_data["id"]
+            )
+        except DoesNotExist:
+            organization = Organization()
+            organization.organization_id = organization_data["id"]
+
+        organization.fetched_at = datetime.now
+        organization.name = organization_data["name"]
+
+        organization.save()
+
+        return organization
+
+    def create_or_update_workspace(self, workspace_data: dict) -> Workspace:
+        try:
+            workspace = Workspace.objects.get(workspace_id=workspace_data["id"])
+        except DoesNotExist:
+            workspace = Workspace()
+            workspace.workspace_id = workspace_data["id"]
+
+        workspace.fetched_at = datetime.now
+        workspace.name = workspace_data["name"]
+
+        workspace.save()
+
+        return workspace

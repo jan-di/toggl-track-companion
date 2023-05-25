@@ -2,7 +2,7 @@ from os import path
 from functools import wraps
 from flask import Flask, session, request, redirect, render_template, url_for
 
-from src.toggl import TogglApi
+from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User
 from mongoengine import DoesNotExist
 
@@ -29,24 +29,14 @@ class FlaskApp:
                 password = request.form["password"]
 
                 toggl_api = TogglApi(username=username, password=password)
+                toggl_updater = TogglUpdater()
                 success, toggl_user, _status = toggl_api.get_me()
 
                 if success:
                     session["user_id"] = toggl_user["id"]
                     next_url = request.args.get("next", url_for("index"))
 
-                    try:
-                        user = User.objects.get(user_id=toggl_user["id"])
-                    except DoesNotExist:
-                        user = User()
-                        user.user_id = toggl_user["id"]
-
-                    user.name = toggl_user["fullname"]
-                    user.email = toggl_user["email"]
-                    user.image_url = toggl_user["image_url"]
-                    user.api_token = toggl_user["api_token"]
-
-                    user.save()
+                    toggl_updater.create_or_update_user(toggl_user)
 
                     return redirect(next_url)
                 else:
