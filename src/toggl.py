@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+import time
 
 import httpx
 from mongoengine import DoesNotExist
@@ -19,33 +20,39 @@ class TogglApi:
         self.base_url = base_url
         self.client = httpx.Client()
 
-    def get_me(self) -> tuple[bool, any, int]:
+    def get_me(self) -> tuple[bool, any]:
         req = self.__request("GET", "/api/v9/me")
         return self.__response(req)
 
-    def get_my_organizations(self) -> tuple[bool, any, int]:
+    def get_my_organizations(self) -> tuple[bool, any]:
         req = self.__request("GET", "/api/v9/me/organizations")
         return self.__response(req)
 
-    def get_my_workspaces(self) -> tuple[bool, any, int]:
+    def get_my_workspaces(self) -> tuple[bool, any]:
         req = self.__request("GET", "/api/v9/me/all_workspaces")
         return self.__response(req)
+    
+    def search_time_entries(self, workspace_id: int, start_date: date, end_date: date) -> list:
+        body = {
+            "start_date": start_date.strftime("%Y-%m-%d"),
+            "end_date": end_date.strftime("%Y-%m-%d"),
+        }
+        result = []
 
-    # def get_time_entries(self, since=None, start_date=None, end_date=None):
-    #     params = {}
-    #     if since is not None:
-    #         params["since"] = since
-    #     if start_date is not None:
-    #         params["start_date"] = start_date
-    #     if end_date is not None:
-    #         params["end_date"] = end_date
+        while True:
+            response = self.__request("POST", f"/reports/api/v3/workspace/{workspace_id}/search/time_entries", json_body=body)
+            response.raise_for_status()
+            result += response.json()
 
-    #     req = self.__request("GET", "/api/v9/me/time_entries", params)
-    #     data = req.json()
-    #     return list(map(self.__create_time_entry_from_api, data))
+            if "x-next-row-number" in response.headers:
+                body["first_row_number"] = int(response.headers["x-next-row-number"])
+            else:
+                break
+
+        return result
 
     def __request(
-        self, method: str, endpoint: str, params: dict = None
+        self, method: str, endpoint: str, params: dict = None, json_body: dict = None
     ) -> httpx.Request:
         if params is None:
             params = {}
@@ -59,8 +66,10 @@ class TogglApi:
             method=method,
             params=params,
             url=f"{self.base_url}{endpoint}",
+            json=json_body,
             auth=auth,
         )
+        time.sleep(0.5)
 
         return req
 
@@ -72,38 +81,14 @@ class TogglApi:
             data = request.json()
         else:
             data = request.text
-        status = request.status_code
 
-        return success, data, status
-
-    # def __create_user_from_api(self, data: map) -> User:
-    #     return User(
-    #         id=data["id"],
-    #         fullname=data["fullname"],
-    #         email=data["email"],
-    #         country_id=data["country_id"],
-    #         timezone=data["timezone"],
-    #         beginning_of_week=data["beginning_of_week"],
-    #         image_url=data["image_url"],
-    #         created_at=data["created_at"],
-    #         updated_at=data["at"],
-    #         api_token=data["api_token"],
-    #     )
-
-    # def __create_time_entry_from_api(self, data: map) -> TimeEntry:
-    #     return TimeEntry(
-    #         id=data["id"],
-    #         description=data["description"],
-    #         start=data["start"],
-    #         stop=data["stop"],
-    #         updated_at=data["at"],
-    #         user_id=data["user_id"],
-    #         workspace_id=data["workspace_id"],
-    #     )
+        return success, data
 
 
 class TogglUpdater:
-    def create_or_update_user(self, user_data: dict, next_sync: int) -> User:
+    MIN_YEAR = 2006
+
+    def create_or_update_user(self, user_data: dict, next_sync: int = 0) -> User:
         try:
             user = User.objects.get(user_id=user_data["id"])
             user.next_sync_at = datetime.now() + timedelta(seconds=next_sync)

@@ -30,7 +30,7 @@ class FlaskApp:
 
                 toggl_api = TogglApi(username=username, password=password)
                 toggl_updater = TogglUpdater()
-                success, toggl_user, _status = toggl_api.get_me()
+                success, toggl_user = toggl_api.get_me()
 
                 if success:
                     session["user_id"] = toggl_user["id"]
