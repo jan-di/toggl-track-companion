@@ -17,11 +17,11 @@ def main():
     config = Config(path.join(script_dir, ".env"))
     Database.connect(config.database_uri)
 
-    updater = Updater()
+    updater = Updater(config.sync_interval)
     updater.run()
 
     Database.disconnect()
-    logger.info("Exiting web..")
+    logger.info("Exiting updater..")
 
 if __name__ == "__main__":
     main()

@@ -1,1 +1,4 @@
 # Toggl Companion
+
+## Configuration
+

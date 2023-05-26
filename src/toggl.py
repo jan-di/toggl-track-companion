@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import httpx
 from mongoengine import DoesNotExist
@@ -90,25 +90,6 @@ class TogglApi:
     #         api_token=data["api_token"],
     #     )
 
-    # def __create_organization_from_api(self, data: map) -> Organization:
-    #     return Organization(
-    #         id=data["id"],
-    #         name=data["name"],
-    #         created_at=data["created_at"],
-    #         updated_at=data["at"],
-    #         deleted_at=data["server_deleted_at"],
-    #     )
-
-    # def __create_workspace_from_api(self, data: map) -> Workspace:
-    #     return Workspace(
-    #         id=data["id"],
-    #         organization_id=data["organization_id"],
-    #         name=data["name"],
-    #         updated_at=data["at"],
-    #         deleted_at=data["server_deleted_at"],
-    #         logo_url=data["logo_url"],
-    #     )
-
     # def __create_time_entry_from_api(self, data: map) -> TimeEntry:
     #     return TimeEntry(
     #         id=data["id"],
@@ -122,13 +103,16 @@ class TogglApi:
 
 
 class TogglUpdater:
-    def create_or_update_user(self, user_data: dict) -> User:
+    def create_or_update_user(self, user_data: dict, next_sync: int) -> User:
         try:
             user = User.objects.get(user_id=user_data["id"])
+            user.next_sync_at = datetime.now() + timedelta(seconds=next_sync)
         except DoesNotExist:
             user = User()
             user.user_id = user_data["id"]
+            user.next_sync_at = datetime.now()
         
+        user.fetched_at = datetime.now()
         user.name = user_data["fullname"]
         user.email = user_data["email"]
         user.image_url = user_data["image_url"]
@@ -147,7 +131,7 @@ class TogglUpdater:
             organization = Organization()
             organization.organization_id = organization_data["id"]
 
-        organization.fetched_at = datetime.now
+        organization.fetched_at = datetime.now()
         organization.name = organization_data["name"]
 
         organization.save()
@@ -161,7 +145,7 @@ class TogglUpdater:
             workspace = Workspace()
             workspace.workspace_id = workspace_data["id"]
 
-        workspace.fetched_at = datetime.now
+        workspace.fetched_at = datetime.now()
         workspace.name = workspace_data["name"]
 
         workspace.save()

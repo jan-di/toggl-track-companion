@@ -23,6 +23,5 @@ def main() -> None:
     Database.disconnect()
     logger.info("Exiting web..")
 
-
 if __name__ == "__main__":
     main()

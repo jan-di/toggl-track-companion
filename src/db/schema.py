@@ -20,6 +20,8 @@ from mongoengine import (
 
 class User(Document):
     user_id = IntField(required=True)
+    fetched_at = DateTimeField(required=True)
+    next_sync_at = DateTimeField(required=True)
     name = StringField(required=True)
     email = StringField(required=True)
     image_url = StringField()
