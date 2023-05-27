@@ -40,7 +40,7 @@ class Updater:
 
             _, toggl_user = toggl_api.get_me()
             self.toggl_updater.create_or_update_user(toggl_user, self.sync_interval)
-            
+
             _, organizations = toggl_api.get_my_organizations()
             for organization in organizations:
                 self.toggl_updater.create_or_update_organization(organization)
@@ -57,3 +57,6 @@ class Updater:
 
                     time_entry_datasets = toggl_api.search_time_entries(workspace.workspace_id, start_date, end_date)
                     time_entry_report += time_entry_datasets
+                
+                for time_entry_data in time_entry_report:
+                    self.toggl_updater.create_or_update_time_entry_from_report_api(time_entry_data, workspace.workspace_id)

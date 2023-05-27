@@ -3,7 +3,7 @@ import time
 
 import httpx
 from mongoengine import DoesNotExist
-from src.db.schema import User, Organization, Workspace
+from src.db.schema import User, Organization, Workspace, TimeEntry
 
 
 class TogglApi:
@@ -96,16 +96,14 @@ class TogglUpdater:
             user = User()
             user.user_id = user_data["id"]
             user.next_sync_at = datetime.now()
-        
+
         user.fetched_at = datetime.now()
         user.name = user_data["fullname"]
         user.email = user_data["email"]
         user.image_url = user_data["image_url"]
         user.api_token = user_data["api_token"]
 
-        user.save()
-
-        return user
+        return user.save()
 
     def create_or_update_organization(self, organization_data: dict) -> Organization:
         try:
@@ -119,9 +117,7 @@ class TogglUpdater:
         organization.fetched_at = datetime.now()
         organization.name = organization_data["name"]
 
-        organization.save()
-
-        return organization
+        return organization.save()
 
     def create_or_update_workspace(self, workspace_data: dict) -> Workspace:
         try:
@@ -133,6 +129,27 @@ class TogglUpdater:
         workspace.fetched_at = datetime.now()
         workspace.name = workspace_data["name"]
 
-        workspace.save()
+        return workspace.save()
 
-        return workspace
+    def create_or_update_time_entry_from_report_api(self, time_entry_data: dict, workspace_id: int) -> TimeEntry:
+        try:
+            time_entry = TimeEntry.objects.get(time_entry_id=time_entry_data["time_entries"][0]["id"])
+        except DoesNotExist:
+            time_entry = TimeEntry()
+            time_entry.time_entry_id = time_entry_data["time_entries"][0]["id"]
+            time_entry.workspace_id = workspace_id
+            time_entry.user_id = time_entry_data["user_id"]
+
+        start_dt = datetime.fromisoformat(time_entry_data["time_entries"][0]["start"])
+        stop_dt = datetime.fromisoformat(time_entry_data["time_entries"][0]["stop"])
+
+        time_entry.fetched_at = datetime.now()
+        time_entry.description = time_entry_data["description"]
+        time_entry.started_at = start_dt
+        time_entry.started_at_offset = start_dt.utcoffset().total_seconds()
+        time_entry.stopped_at = stop_dt
+        time_entry.stopped_at_offset = stop_dt.utcoffset().total_seconds()
+        time_entry.project_id = time_entry_data["project_id"]
+        time_entry.tag_ids = time_entry_data["tag_ids"]
+
+        return time_entry.save()
