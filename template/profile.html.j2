@@ -8,4 +8,10 @@
 {{ user.email }}</p>
 <img src="{{ user.image_url }}" />
 
+<h2>Workspaces</h2>
+
+{% for user_workspace in user.workspaces %}
+    <h3>{{ user_workspace.workspace.organization.name }} > {{ user_workspace.workspace.name }}</h3>
+{% endfor %}
+
 {% endblock content %}

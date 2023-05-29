@@ -148,7 +148,9 @@ class TogglUpdater:
         user.email = user_data["email"]
         user.image_url = user_data["image_url"]
         user.api_token = user_data["api_token"]
-        user.default_workspace_id = user_data["default_workspace_id"]
+        user.default_workspace = Workspace.to_dbref_pk(
+            user_data["default_workspace_id"]
+        )
 
         return user.save()
 
@@ -156,7 +158,10 @@ class TogglUpdater:
         self, user: User, workspace_dataset: list
     ) -> User:
         user.workspaces = list(
-            map(lambda w: UserWorkspace(workspace_id=w["id"]), workspace_dataset)
+            map(
+                lambda w: UserWorkspace(workspace=Workspace.to_dbref_pk(w["id"])),
+                workspace_dataset,
+            )
         )
 
         return user.save()
@@ -189,7 +194,9 @@ class TogglUpdater:
         except DoesNotExist:
             workspace = Workspace(
                 workspace_id=workspace_data["id"],
-                organization_id=workspace_data["organization_id"],
+                organization=Organization.to_dbref_pk(
+                    workspace_data["organization_id"]
+                ),
             )
 
         workspace.fetched_at = datetime.now()
@@ -213,8 +220,8 @@ class TogglUpdater:
         except DoesNotExist:
             time_entry = TimeEntry()
             time_entry.time_entry_id = time_entry_data["time_entries"][0]["id"]
-            time_entry.workspace_id = workspace_id
-            time_entry.user_id = time_entry_data["user_id"]
+            time_entry.workspace = Workspace.to_dbref_pk(workspace_id)
+            time_entry.user = User.to_dbref_pk(time_entry_data["user_id"])
 
         start_dt = datetime.fromisoformat(time_entry_data["time_entries"][0]["start"])
         stop_dt = datetime.fromisoformat(time_entry_data["time_entries"][0]["stop"])
@@ -225,8 +232,8 @@ class TogglUpdater:
         time_entry.started_at_offset = start_dt.utcoffset().total_seconds()
         time_entry.stopped_at = stop_dt
         time_entry.stopped_at_offset = stop_dt.utcoffset().total_seconds()
-        time_entry.project_id = time_entry_data["project_id"]
-        time_entry.tag_ids = time_entry_data["tag_ids"]
+        time_entry.project_id = Project.to_dbref_pk(time_entry_data["project_id"])
+        time_entry.tag_ids = Tag.to_dbref_pks(time_entry_data["tag_ids"])
 
         return time_entry.save()
 
@@ -241,7 +248,7 @@ class TogglUpdater:
         except DoesNotExist:
             client = Client(
                 client_id=client_data["id"],
-                workspace_id=client_data["wid"],
+                workspace=Workspace.to_dbref_pk(client_data["wid"]),
             )
 
         client.fetched_at = datetime.now()
@@ -261,12 +268,13 @@ class TogglUpdater:
         except DoesNotExist:
             project = Project(
                 project_id=project_data["id"],
-                workspace_id=project_data["workspace_id"],
+                workspace=Workspace.to_dbref_pk(project_data["workspace_id"]),
             )
 
         project.fetched_at = datetime.now()
         project.name = project_data["name"]
         project.color = project_data["color"]
+        project.client = Client.to_dbref_pk(project_data["client_id"])
 
         return project.save()
 
@@ -281,7 +289,7 @@ class TogglUpdater:
         except DoesNotExist:
             tag = Tag(
                 tag_id=tag_data["id"],
-                workspace_id=tag_data["workspace_id"],
+                workspace=Workspace.to_dbref_pk(tag_data["workspace_id"]),
             )
 
         tag.fetched_at = datetime.now()
