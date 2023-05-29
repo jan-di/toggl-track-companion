@@ -18,6 +18,7 @@ from mongoengine import (
 #     organization_id = IntField(required=True)
 #     workspace_id = IntField(required=True)
 
+
 class UserWorkspace(EmbeddedDocument):
     workspace_id = IntField(required=True)
 
@@ -62,6 +63,7 @@ class TimeEntry(Document):
     stopped_at = DateTimeField()
     stopped_at_offset = IntField(required=True)
 
+
 class Client(Document):
     fetched_at = DateTimeField(required=True)
     client_id = IntField(required=True)
@@ -69,12 +71,14 @@ class Client(Document):
     name = StringField(required=True)
     archived = BooleanField(required=True)
 
+
 class Project(Document):
     fetched_at = DateTimeField(required=True)
     project_id = IntField(required=True)
     workspace_id = IntField(required=True)
     name = StringField(required=True)
     color = StringField()
+
 
 class Tag(Document):
     fetched_at = DateTimeField(required=True)

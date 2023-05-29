@@ -3,7 +3,16 @@ import time
 
 import httpx
 from mongoengine import DoesNotExist
-from src.db.schema import User, UserWorkspace, Organization, Workspace, TimeEntry, Client, Tag, Project
+from src.db.schema import (
+    User,
+    UserWorkspace,
+    Organization,
+    Workspace,
+    TimeEntry,
+    Client,
+    Tag,
+    Project,
+)
 
 
 class TogglApi:
@@ -30,20 +39,30 @@ class TogglApi:
         return self.__simple_request("GET", "/api/v9/me/all_workspaces")
 
     def get_workspace_clients(self, workspace_id: int) -> list[dict]:
-        return self.__simple_request("GET", f"/api/v9/workspaces/{workspace_id}/clients")
+        return self.__simple_request(
+            "GET", f"/api/v9/workspaces/{workspace_id}/clients"
+        )
 
     def get_workspace_tags(self, workspace_id: int) -> list[dict]:
         return self.__simple_request("GET", f"/api/v9/workspaces/{workspace_id}/tags")
 
     def get_workspace_projects(self, workspace_id: int) -> list[dict]:
-        return self.__paginated_request("GET", f"/api/v9/workspaces/{workspace_id}/projects")
+        return self.__paginated_request(
+            "GET", f"/api/v9/workspaces/{workspace_id}/projects"
+        )
 
-    def get_workspace_time_entries(self, workspace_id: int, start_date: date, end_date: date) -> list:
+    def get_workspace_time_entries(
+        self, workspace_id: int, start_date: date, end_date: date
+    ) -> list:
         body = {
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": end_date.strftime("%Y-%m-%d"),
         }
-        return self.__paginated_report_request("POST", f"/reports/api/v3/workspace/{workspace_id}/search/time_entries", body)
+        return self.__paginated_report_request(
+            "POST",
+            f"/reports/api/v3/workspace/{workspace_id}/search/time_entries",
+            body,
+        )
 
     def __request(
         self, method: str, endpoint: str, params: dict = None, json_body: dict = None
@@ -68,16 +87,12 @@ class TogglApi:
 
         return response
 
-    def __simple_request(
-        self, method: str, endpoint: str, params: dict = None
-    ):
+    def __simple_request(self, method: str, endpoint: str, params: dict = None):
         response = self.__request(method, endpoint, params=params)
 
         return response.json()
 
-    def __paginated_request(
-        self, method: str, endpoint: str, params: dict = None
-    ):
+    def __paginated_request(self, method: str, endpoint: str, params: dict = None):
         result = []
         params = {} if params is None else params
         params["page"] = 1
@@ -105,7 +120,9 @@ class TogglApi:
             result += response.json()
 
             if "x-next-row-number" in response.headers:
-                json_body["first_row_number"] = int(response.headers["x-next-row-number"])
+                json_body["first_row_number"] = int(
+                    response.headers["x-next-row-number"]
+                )
             else:
                 break
 
@@ -115,7 +132,9 @@ class TogglApi:
 class TogglUpdater:
     MIN_YEAR = 2006
 
-    def create_or_update_user_from_api(self, user_data: dict, next_sync: int = 0) -> User:
+    def create_or_update_user_from_api(
+        self, user_data: dict, next_sync: int = 0
+    ) -> User:
         try:
             user = User.objects.get(user_id=user_data["id"])
             user.next_sync_at = datetime.now() + timedelta(seconds=next_sync)
@@ -133,22 +152,24 @@ class TogglUpdater:
 
         return user.save()
 
-    def update_user_workspaces_from_api(self, user: User, workspace_dataset: list) -> User:
-        user.workspaces = list(map(lambda w: UserWorkspace(
-            workspace_id=w["id"]
-        ), workspace_dataset))
+    def update_user_workspaces_from_api(
+        self, user: User, workspace_dataset: list
+    ) -> User:
+        user.workspaces = list(
+            map(lambda w: UserWorkspace(workspace_id=w["id"]), workspace_dataset)
+        )
 
         return user.save()
 
-    def create_or_update_organization_from_api(self, organization_data: dict) -> Organization:
+    def create_or_update_organization_from_api(
+        self, organization_data: dict
+    ) -> Organization:
         try:
             organization = Organization.objects.get(
                 organization_id=organization_data["id"]
             )
         except DoesNotExist:
-            organization = Organization(
-                organization_id = organization_data["id"]
-            )
+            organization = Organization(organization_id=organization_data["id"])
 
         organization.fetched_at = datetime.now()
         organization.name = organization_data["name"]
@@ -162,8 +183,8 @@ class TogglUpdater:
             )
         except DoesNotExist:
             workspace = Workspace(
-                workspace_id = workspace_data["id"],
-                organization_id = workspace_data["organization_id"],
+                workspace_id=workspace_data["id"],
+                organization_id=workspace_data["organization_id"],
             )
 
         workspace.fetched_at = datetime.now()
@@ -172,9 +193,13 @@ class TogglUpdater:
 
         return workspace.save()
 
-    def create_or_update_time_entry_from_report_api(self, time_entry_data: dict, workspace_id: int) -> TimeEntry:
+    def create_or_update_time_entry_from_report_api(
+        self, time_entry_data: dict, workspace_id: int
+    ) -> TimeEntry:
         try:
-            time_entry = TimeEntry.objects.get(time_entry_id=time_entry_data["time_entries"][0]["id"])
+            time_entry = TimeEntry.objects.get(
+                time_entry_id=time_entry_data["time_entries"][0]["id"]
+            )
         except DoesNotExist:
             time_entry = TimeEntry()
             time_entry.time_entry_id = time_entry_data["time_entries"][0]["id"]
@@ -205,8 +230,8 @@ class TogglUpdater:
             client = Client.objects.get(client_id=client_data["id"])
         except DoesNotExist:
             client = Client(
-                client_id = client_data["id"],
-                workspace_id = client_data["wid"],
+                client_id=client_data["id"],
+                workspace_id=client_data["wid"],
             )
 
         client.fetched_at = datetime.now()
@@ -225,8 +250,8 @@ class TogglUpdater:
             project = Project.objects.get(project_id=project_data["id"])
         except DoesNotExist:
             project = Project(
-                project_id = project_data["id"],
-                workspace_id = project_data["workspace_id"],
+                project_id=project_data["id"],
+                workspace_id=project_data["workspace_id"],
             )
 
         project.fetched_at = datetime.now()
@@ -245,8 +270,8 @@ class TogglUpdater:
             tag = Tag.objects.get(tag_id=tag_data["id"])
         except DoesNotExist:
             tag = Tag(
-                tag_id = tag_data["id"],
-                workspace_id = tag_data["workspace_id"],
+                tag_id=tag_data["id"],
+                workspace_id=tag_data["workspace_id"],
             )
 
         tag.fetched_at = datetime.now()

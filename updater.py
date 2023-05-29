@@ -23,5 +23,6 @@ def main():
     Database.disconnect()
     logger.info("Exiting updater..")
 
+
 if __name__ == "__main__":
     main()
