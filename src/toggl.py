@@ -20,16 +20,15 @@ class TogglApi:
         self.base_url = base_url
         self.client = httpx.Client()
 
-    def get_me(self) -> tuple[bool, any]:
-        req = self.__request("GET", "/api/v9/me")
-        return self.__response(req)
+    def get_me(self) -> dict:
+        return self.__simple_request("GET", "/api/v9/me")
 
     def get_my_organizations(self) -> list[dict]:
         return self.__simple_request("GET", "/api/v9/me/organizations")
 
     def get_my_workspaces(self) -> list[dict]:
         return self.__simple_request("GET", "/api/v9/me/all_workspaces")
-    
+
     def get_workspace_clients(self, workspace_id: int) -> list[dict]:
         return self.__simple_request("GET", f"/api/v9/workspaces/{workspace_id}/clients")
 
@@ -39,23 +38,12 @@ class TogglApi:
     def get_workspace_projects(self, workspace_id: int) -> list[dict]:
         return self.__paginated_request("GET", f"/api/v9/workspaces/{workspace_id}/projects")
 
-    def search_time_entries(self, workspace_id: int, start_date: date, end_date: date) -> list:
+    def get_workspace_time_entries(self, workspace_id: int, start_date: date, end_date: date) -> list:
         body = {
             "start_date": start_date.strftime("%Y-%m-%d"),
             "end_date": end_date.strftime("%Y-%m-%d"),
         }
-        result = []
-
-        while True:
-            response = self.__request("POST", f"/reports/api/v3/workspace/{workspace_id}/search/time_entries", json_body=body)
-            result += response.json()
-
-            if "x-next-row-number" in response.headers:
-                body["first_row_number"] = int(response.headers["x-next-row-number"])
-            else:
-                break
-
-        return result
+        return self.__paginated_report_request("POST", f"/reports/api/v3/workspace/{workspace_id}/search/time_entries", body)
 
     def __request(
         self, method: str, endpoint: str, params: dict = None, json_body: dict = None
@@ -79,23 +67,23 @@ class TogglApi:
         time.sleep(0.5)
 
         return response
-    
+
     def __simple_request(
         self, method: str, endpoint: str, params: dict = None
     ):
-        response = self.__request(method, endpoint, params)
+        response = self.__request(method, endpoint, params=params)
 
         return response.json()
-    
+
     def __paginated_request(
         self, method: str, endpoint: str, params: dict = None
     ):
         result = []
         params = {} if params is None else params
         params["page"] = 1
-        
+
         while True:
-            response = self.__request(method, endpoint, params)
+            response = self.__request(method, endpoint, params=params)
             response_json = response.json()
 
             if len(response_json) == 0:
@@ -106,23 +94,28 @@ class TogglApi:
 
         return result
 
-    # DEPRECATED
-    def __response(self, request: httpx.Request) -> tuple[bool, any, int]:
-        success = request.status_code < 300
-        if success and request.headers.get("content-type").lower().startswith(
-            "application/json"
-        ):
-            data = request.json()
-        else:
-            data = request.text
+    def __paginated_report_request(
+        self, method: str, endpoint: str, json_body: dict = None
+    ):
+        result = []
+        json_body = {} if json_body is None else json_body
 
-        return success, data
+        while True:
+            response = self.__request(method, endpoint, json_body=json_body)
+            result += response.json()
+
+            if "x-next-row-number" in response.headers:
+                json_body["first_row_number"] = int(response.headers["x-next-row-number"])
+            else:
+                break
+
+        return result
 
 
 class TogglUpdater:
     MIN_YEAR = 2006
 
-    def create_or_update_user(self, user_data: dict, next_sync: int = 0) -> User:
+    def create_or_update_user_from_api(self, user_data: dict, next_sync: int = 0) -> User:
         try:
             user = User.objects.get(user_id=user_data["id"])
             user.next_sync_at = datetime.now() + timedelta(seconds=next_sync)
@@ -140,7 +133,7 @@ class TogglUpdater:
 
         return user.save()
 
-    def update_user_workspaces(self, user: User, workspace_dataset: list) -> User:
+    def update_user_workspaces_from_api(self, user: User, workspace_dataset: list) -> User:
         user.workspaces = list(map(lambda w: UserWorkspace(
             workspace_id=w["id"]
         ), workspace_dataset))
@@ -202,6 +195,11 @@ class TogglUpdater:
 
         return time_entry.save()
 
+    def delete_time_entries_via_ids(self, time_entry_ids: set) -> None:
+        time_entries = TimeEntry.objects(time_entry_id__in=time_entry_ids)
+        for time_entry in time_entries:
+            time_entry.delete()
+
     def create_or_update_client_from_api(self, client_data: dict) -> Client:
         try:
             client = Client.objects.get(client_id=client_data["id"])
@@ -210,13 +208,13 @@ class TogglUpdater:
                 client_id = client_data["id"],
                 workspace_id = client_data["wid"],
             )
-        
+
         client.fetched_at = datetime.now()
         client.name = client_data["name"]
         client.archived = client_data["archived"]
 
         return client.save()
-    
+
     def delete_clients_via_ids(self, client_ids: set) -> None:
         clients = Client.objects(client_id__in=client_ids)
         for client in clients:
@@ -230,7 +228,7 @@ class TogglUpdater:
                 project_id = project_data["id"],
                 workspace_id = project_data["workspace_id"],
             )
-        
+
         project.fetched_at = datetime.now()
         project.name = project_data["name"]
         project.color = project_data["color"]

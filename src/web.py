@@ -1,6 +1,7 @@
 from os import path
 from functools import wraps
 from flask import Flask, session, request, redirect, render_template, url_for
+from httpx import HTTPStatusError
 
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User
@@ -29,16 +30,17 @@ class FlaskApp:
 
                 toggl_api = TogglApi(username=username, password=password)
                 toggl_updater = TogglUpdater()
-                success, toggl_user = toggl_api.get_me()
 
-                if success:
-                    session["user_id"] = toggl_user["id"]
+                try:
+                    user_data = toggl_api.get_me()
+
+                    session["user_id"] = user_data["id"]
                     next_url = request.args.get("next", url_for("index"))
 
-                    toggl_updater.create_or_update_user(toggl_user)
+                    toggl_updater.create_or_update_user_from_api(user_data)
 
                     return redirect(next_url)
-                else:
+                except HTTPStatusError:
                     error_msg = "Login failed."
 
             return render_template("login.html.j2", error_msg=error_msg)

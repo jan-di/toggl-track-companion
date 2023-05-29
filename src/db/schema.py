@@ -81,4 +81,3 @@ class Tag(Document):
     tag_id = IntField(required=True)
     workspace_id = IntField(required=True)
     name = StringField(required=True)
-
