@@ -2,6 +2,8 @@
 
 {% block content %}
 
+
+
 <h1>Profile</h1>
 
 <p>{{ user.name }}<br/>
@@ -10,8 +12,26 @@
 
 <h2>Workspaces</h2>
 
+<form method="post">
 {% for user_workspace in user.workspaces %}
-    <h3>{{ user_workspace.workspace.organization.name }} > {{ user_workspace.workspace.name }}</h3>
+    <h3>{{ user_workspace.workspace.organization.name }} » <img src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.name }}</h3>
+
+    <label for="start">Start of aggration:</label>
+    <input type="date" 
+        id="{{ user_workspace.workspace.id }}-start-of-aggregation" 
+        name="{{ user_workspace.workspace.id }}-start-of-aggregation" 
+        value="{{user_workspace.start_of_aggregation }}" 
+        min="{{ toggl_api_class.MIN_YEAR }}-01-01">
+
+    <label for="url">Schedule calendar url</label>
+    <input type="url" id="{{ user_workspace.workspace.id }}-schedule-calendar-url"
+        name="{{ user_workspace.workspace.id }}-schedule-calendar-url"
+        pattern="https://.*">
+<br/>
 {% endfor %}
+
+<button type="submit" class="btn btn-primary">Save</button>
+
+</form>
 
 {% endblock content %}

@@ -51,12 +51,17 @@ class FlaskApp:
             del session["user_id"]
             return redirect("login")
 
-        @self.app.route("/profile")
+        @self.app.route("/profile", methods=["GET", "POST"])
         @self.__require_auth
         def profile():
             user = User.objects.get(user_id=session["user_id"])
 
-            return render_template("profile.html.j2", user=user)
+            if request.method == "POST":
+                print(request.form)
+
+            return render_template(
+                "profile.html.j2", user=user, toggl_api_class=TogglApi
+            )
 
     def run(self):
         self.app.run(debug=True, use_reloader=False, host="0.0.0.0")

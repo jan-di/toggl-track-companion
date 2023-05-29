@@ -6,21 +6,13 @@ from mongoengine import (
     EmbeddedDocument,
     StringField,
     IntField,
+    DateField,
     DateTimeField,
-    # DateField,
     EmbeddedDocumentField,
     ListField,
-    # FloatField,
     BooleanField,
     ReferenceField,
 )
-
-
-# class UserCalendar(EmbeddedDocument):
-#     url = StringField()
-#     user_id = IntField(required=True)
-#     organization_id = IntField(required=True)
-#     workspace_id = IntField(required=True)
 
 
 class BaseDocument(Document):
@@ -69,6 +61,8 @@ class Workspace(BaseDocument):
 
 class UserWorkspace(EmbeddedDocument):
     workspace = ReferenceField(Workspace, db_field="workspace_id", required=True)
+    schedule_calendar_url = StringField()
+    start_of_aggregation = DateField(required=True)
 
 
 class User(BaseDocument):

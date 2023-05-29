@@ -3,7 +3,6 @@ import logging
 import signal
 from datetime import date, datetime
 
-from bson import DBRef
 from src.db.schema import User, Client, Tag, Project, TimeEntry, Workspace, Organization
 from src.toggl import TogglApi, TogglUpdater
 
@@ -68,19 +67,21 @@ class Updater:
 
             # create/update workspaces
             workspace_dataset = toggl_api.get_my_workspaces()
-            self.toggl_updater.update_user_workspaces_from_api(user, workspace_dataset)
+            workspaces = []
             for workspace_data in workspace_dataset:
-                workspace = self.toggl_updater.create_or_update_workspace_from_api(
-                    workspace_data
+                workspaces.append(
+                    self.toggl_updater.create_or_update_workspace_from_api(
+                        workspace_data
+                    )
                 )
-                workspaces_created_updated += 1
+            self.toggl_updater.update_user_workspaces_from_api(user, workspace_dataset)
+            workspaces_created_updated += len(workspaces)
 
+            for workspace in workspaces:
                 # create/update clients
                 client_dataset = toggl_api.get_workspace_clients(workspace.workspace_id)
                 for client_data in client_dataset:
-                    self.toggl_updater.create_or_update_client_from_api(
-                        client_data
-                    )
+                    self.toggl_updater.create_or_update_client_from_api(client_data)
                 clients_created_updated = len(client_dataset)
 
                 # create/update projects
@@ -88,9 +89,7 @@ class Updater:
                     workspace.workspace_id
                 )
                 for project_data in project_dataset:
-                    self.toggl_updater.create_or_update_project_from_api(
-                        project_data
-                    )
+                    self.toggl_updater.create_or_update_project_from_api(project_data)
 
                 projects_created_updated = len(project_dataset)
 
@@ -102,7 +101,7 @@ class Updater:
 
                 # create/update time entries
                 time_entry_dataset = []
-                for year in range(TogglUpdater.MIN_YEAR, date.today().year + 1):
+                for year in range(TogglApi.MIN_YEAR, date.today().year + 1):
                     start_date = date(year, 1, 1)
                     end_date = date(year, 12, 31)
 
@@ -120,9 +119,7 @@ class Updater:
                     map(lambda d: d["time_entries"][0]["id"], time_entry_dataset)
                 )
                 local_time_entry_ids = set(
-                    TimeEntry.objects(workspace=workspace).scalar(
-                        "time_entry_id"
-                    )
+                    TimeEntry.objects(workspace=workspace).scalar("time_entry_id")
                 )
                 time_entry_ids_to_delete = local_time_entry_ids - remote_time_entry_ids
                 self.toggl_updater.delete_time_entries_via_ids(time_entry_ids_to_delete)
@@ -130,9 +127,7 @@ class Updater:
 
                 # delete tags
                 remote_tag_ids = set(map(lambda d: d["id"], tag_dataset))
-                local_tag_ids = set(
-                    Tag.objects(workspace=workspace).scalar("tag_id")
-                )
+                local_tag_ids = set(Tag.objects(workspace=workspace).scalar("tag_id"))
                 tag_ids_to_delete = local_tag_ids - remote_tag_ids
                 self.toggl_updater.delete_tags_via_ids(tag_ids_to_delete)
                 tags_deleted += len(tag_ids_to_delete)
@@ -140,9 +135,7 @@ class Updater:
                 # delete projects
                 remote_project_ids = set(map(lambda d: d["id"], project_dataset))
                 local_project_ids = set(
-                    Project.objects(workspace=workspace).scalar(
-                        "project_id"
-                    )
+                    Project.objects(workspace=workspace).scalar("project_id")
                 )
                 project_ids_to_delete = local_project_ids - remote_project_ids
                 self.toggl_updater.delete_projects_via_ids(project_ids_to_delete)
@@ -151,9 +144,7 @@ class Updater:
                 # delete clients
                 remote_client_ids = set(map(lambda d: d["id"], client_dataset))
                 local_client_ids = set(
-                    Client.objects(workspace=workspace).scalar(
-                        "client_id"
-                    )
+                    Client.objects(workspace=workspace).scalar("client_id")
                 )
                 client_ids_to_delete = local_client_ids - remote_client_ids
                 self.toggl_updater.delete_clients_via_ids(client_ids_to_delete)
@@ -163,7 +154,9 @@ class Updater:
         used_workspace_ids = set()
         user = User.objects().only("workspaces")
         for user in users:
-            used_workspace_ids.update(map(lambda uw: uw.workspace.workspace_id, user.workspaces))
+            used_workspace_ids.update(
+                map(lambda uw: uw.workspace.workspace_id, user.workspaces)
+            )
         all_workspace_ids = set(Workspace.objects().scalar("workspace_id"))
         workspace_ids_to_delete = all_workspace_ids - used_workspace_ids
         self.toggl_updater.delete_workspaces_via_ids(workspace_ids_to_delete)
@@ -173,7 +166,9 @@ class Updater:
         used_organization_ids = set()
         workspaces = Workspace.objects().only("organization")
         for workspace in workspaces:
-            used_organization_ids.update(map(lambda w: w.organization.organization_id, workspaces))
+            used_organization_ids.update(
+                map(lambda w: w.organization.organization_id, workspaces)
+            )
         all_organization_ids = set(Organization.objects().scalar("organization_id"))
         organization_ids_to_delete = all_organization_ids - used_organization_ids
         self.toggl_updater.delete_organizations_via_ids(organization_ids_to_delete)

@@ -16,6 +16,8 @@ from src.db.schema import (
 
 
 class TogglApi:
+    MIN_YEAR = 2006
+    
     def __init__(
         self,
         api_token: str = None,
@@ -130,8 +132,6 @@ class TogglApi:
 
 
 class TogglUpdater:
-    MIN_YEAR = 2006
-
     def create_or_update_user_from_api(
         self, user_data: dict, next_sync: int = 0
     ) -> User:
@@ -157,12 +157,19 @@ class TogglUpdater:
     def update_user_workspaces_from_api(
         self, user: User, workspace_dataset: list
     ) -> User:
-        user.workspaces = list(
-            map(
-                lambda w: UserWorkspace(workspace=Workspace.to_dbref_pk(w["id"])),
-                workspace_dataset,
-            )
-        )
+        indexed_workspace_dataset = {wd["id"]:wd for wd in workspace_dataset}
+        indexed_workspaces = {w.workspace.id:w for w in user.workspaces}
+        keys_to_delete = set(indexed_workspaces.keys()) - set(indexed_workspace_dataset.keys())
+        keys_to_add = set(indexed_workspace_dataset.keys()) - set(indexed_workspaces.keys())
+
+        for key in keys_to_delete:
+            del indexed_workspaces[key]
+
+        for key in keys_to_add:
+            indexed_workspaces[key] = UserWorkspace(workspace=Workspace.to_dbref_pk(key))
+            indexed_workspaces[key].start_of_aggregation = date.today()
+
+        user.workspaces = list(indexed_workspaces.values())
 
         return user.save()
 
