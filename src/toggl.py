@@ -176,6 +176,11 @@ class TogglUpdater:
 
         return organization.save()
 
+    def delete_organizations_via_ids(self, organization_ids: set) -> None:
+        organizations = Organization.objects(organization_id__in=organization_ids)
+        for organization in organizations:
+            organization.delete()
+
     def create_or_update_workspace_from_api(self, workspace_data: dict) -> Workspace:
         try:
             workspace = Workspace.objects.get(
@@ -192,6 +197,11 @@ class TogglUpdater:
         workspace.logo_url = workspace_data["logo_url"]
 
         return workspace.save()
+
+    def delete_workspaces_via_ids(self, workspace_ids: set) -> None:
+        workspaces = Workspace.objects(workspace_id__in=workspace_ids)
+        for workspace in workspaces:
+            workspace.delete()
 
     def create_or_update_time_entry_from_report_api(
         self, time_entry_data: dict, workspace_id: int

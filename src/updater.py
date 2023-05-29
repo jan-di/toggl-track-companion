@@ -3,7 +3,7 @@ import logging
 import signal
 from datetime import date, datetime
 
-from src.db.schema import User, Client, Tag, Project, TimeEntry
+from src.db.schema import User, Client, Tag, Project, TimeEntry, Workspace, Organization
 from src.toggl import TogglApi, TogglUpdater
 
 
@@ -30,8 +30,7 @@ class Updater:
             self.exit_event.wait(50)
 
     def cycle(self):
-        users = User.objects()
-        # users = User.objects(next_sync_at__lte=datetime.now())
+        users = User.objects(next_sync_at__lte=datetime.now())
         logging.info("Found %s users to sync", len(users))
 
         users_updated = 0
@@ -154,14 +153,32 @@ class Updater:
                 self.toggl_updater.delete_clients_via_ids(client_ids_to_delete)
                 clients_deleted += len(client_ids_to_delete)
 
+        # delete workspaces
+        used_workspace_ids = set()
+        user = User.objects().only("workspaces")
+        for user in users:
+            used_workspace_ids.update(map(lambda w: w.workspace_id, user.workspaces))
+        all_workspace_ids = set(Workspace.objects().scalar("workspace_id"))
+        workspace_ids_to_delete = all_workspace_ids - used_workspace_ids
+        self.toggl_updater.delete_workspaces_via_ids(workspace_ids_to_delete)
+        workspaces_deleted += len(workspace_ids_to_delete)
+
+        # delete organizations
+        used_organization_ids = set(Workspace.objects().scalar("organization_id"))
+        all_organization_ids = set(Organization.objects().scalar("organization_id"))
+        organization_ids_to_delete = all_organization_ids - used_organization_ids
+        self.toggl_updater.delete_organizations_via_ids(organization_ids_to_delete)
+        organizations_deleted += len(organization_ids_to_delete)
+
+        # log some sync stats
         logging.info("Users updated: %i", users_updated)
         logging.info(
-            "Organizations created/updated: %i; deleted: %i (not implemented)",
+            "Organizations created/updated: %i; deleted: %i",
             organizations_created_updated,
             organizations_deleted,
         )
         logging.info(
-            "Clients created/updated: %i; deleted: %i (not implemented)",
+            "Workspaces created/updated: %i; deleted: %i",
             workspaces_created_updated,
             workspaces_deleted,
         )

@@ -35,11 +35,15 @@ class User(Document):
     workspaces = ListField(EmbeddedDocumentField(UserWorkspace))
     # calendars = ListField(EmbeddedDocumentField(UserCalendar))
 
+    meta = {"indexes": ["user_id"]}
+
 
 class Organization(Document):
     fetched_at = DateTimeField(required=True)
     organization_id = IntField(required=True)
     name = StringField(required=True)
+
+    meta = {"indexes": ["organization_id"]}
 
 
 class Workspace(Document):
@@ -48,6 +52,8 @@ class Workspace(Document):
     organization_id = IntField(required=True)
     name = StringField(required=True)
     logo_url = StringField()
+
+    meta = {"indexes": ["workspace_id", "organization_id"]}
 
 
 class TimeEntry(Document):
@@ -63,6 +69,10 @@ class TimeEntry(Document):
     stopped_at = DateTimeField()
     stopped_at_offset = IntField(required=True)
 
+    meta = {
+        "indexes": ["time_entry_id", "user_id", "workspace_id", "project_id", "tag_ids"]
+    }
+
 
 class Client(Document):
     fetched_at = DateTimeField(required=True)
@@ -70,6 +80,8 @@ class Client(Document):
     workspace_id = IntField(required=True)
     name = StringField(required=True)
     archived = BooleanField(required=True)
+
+    meta = {"indexes": ["client_id", "workspace_id"]}
 
 
 class Project(Document):
@@ -79,9 +91,13 @@ class Project(Document):
     name = StringField(required=True)
     color = StringField()
 
+    meta = {"indexes": ["project_id", "workspace_id"]}
+
 
 class Tag(Document):
     fetched_at = DateTimeField(required=True)
     tag_id = IntField(required=True)
     workspace_id = IntField(required=True)
     name = StringField(required=True)
+
+    meta = {"indexes": ["tag_id", "workspace_id"]}
