@@ -4,7 +4,6 @@ from flask import Flask, session, request, redirect, render_template, url_for
 
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User
-from mongoengine import DoesNotExist
 
 
 class FlaskApp:

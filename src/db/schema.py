@@ -1,13 +1,14 @@
 from mongoengine import (
     Document,
-    # EmbeddedDocument,
+    EmbeddedDocument,
     StringField,
     IntField,
     DateTimeField,
     # DateField,
-    # EmbeddedDocumentField,
+    EmbeddedDocumentField,
     ListField,
     # FloatField,
+    BooleanField,
 )
 
 
@@ -16,6 +17,9 @@ from mongoengine import (
 #     user_id = IntField(required=True)
 #     organization_id = IntField(required=True)
 #     workspace_id = IntField(required=True)
+
+class UserWorkspace(EmbeddedDocument):
+    workspace_id = IntField(required=True)
 
 
 class User(Document):
@@ -26,6 +30,8 @@ class User(Document):
     email = StringField(required=True)
     image_url = StringField()
     api_token = StringField(required=True)
+    default_workspace_id = IntField(required=True)
+    workspaces = ListField(EmbeddedDocumentField(UserWorkspace))
     # calendars = ListField(EmbeddedDocumentField(UserCalendar))
 
 
@@ -38,7 +44,10 @@ class Organization(Document):
 class Workspace(Document):
     fetched_at = DateTimeField(required=True)
     workspace_id = IntField(required=True)
+    organization_id = IntField(required=True)
     name = StringField(required=True)
+    logo_url = StringField()
+
 
 class TimeEntry(Document):
     fetched_at = DateTimeField(required=True)
@@ -52,3 +61,24 @@ class TimeEntry(Document):
     started_at_offset = IntField(required=True)
     stopped_at = DateTimeField()
     stopped_at_offset = IntField(required=True)
+
+class Client(Document):
+    fetched_at = DateTimeField(required=True)
+    client_id = IntField(required=True)
+    workspace_id = IntField(required=True)
+    name = StringField(required=True)
+    archived = BooleanField(required=True)
+
+class Project(Document):
+    fetched_at = DateTimeField(required=True)
+    project_id = IntField(required=True)
+    workspace_id = IntField(required=True)
+    name = StringField(required=True)
+    color = StringField()
+
+class Tag(Document):
+    fetched_at = DateTimeField(required=True)
+    tag_id = IntField(required=True)
+    workspace_id = IntField(required=True)
+    name = StringField(required=True)
+
