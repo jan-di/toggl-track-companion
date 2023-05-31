@@ -2,9 +2,10 @@ from os import path
 from functools import wraps
 from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
+from datetime import datetime, date
 
 from src.toggl import TogglApi, TogglUpdater
-from src.db.schema import User
+from src.db.schema import User, Workspace
 
 
 class FlaskApp:
@@ -57,7 +58,21 @@ class FlaskApp:
             user = User.objects.get(user_id=session["user_id"])
 
             if request.method == "POST":
-                print(request.form)
+                for key, value in request.form.items():
+                    workspace_id, name = key.split("-", 1)
+
+                    workspace = Workspace.objects.get(workspace_id=workspace_id)
+                    user_workspace = user.workspaces.get(workspace=workspace)
+
+                    match name:
+                        case "start-of-aggregation":
+                            user_workspace.start_of_aggregation = datetime.strptime(
+                                value, "%Y-%m-%d"
+                            ).date()
+                        case "schedule-calendar-url":
+                            user_workspace.schedule_calendar_url = value
+
+                    user.save()
 
             return render_template(
                 "profile.html.j2", user=user, toggl_api_class=TogglApi

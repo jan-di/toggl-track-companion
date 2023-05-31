@@ -14,7 +14,7 @@
 
 <form method="post">
 {% for user_workspace in user.workspaces %}
-    <h3>{{ user_workspace.workspace.organization.name }} » <img src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.name }}</h3>
+    <h3>{{ user_workspace.workspace.organization.name }} » <img style="width: 1em;" src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.name }}</h3>
 
     <label for="start">Start of aggration:</label>
     <input type="date" 
@@ -26,6 +26,7 @@
     <label for="url">Schedule calendar url</label>
     <input type="url" id="{{ user_workspace.workspace.id }}-schedule-calendar-url"
         name="{{ user_workspace.workspace.id }}-schedule-calendar-url"
+        value="{{user_workspace.schedule_calendar_url }}"
         pattern="https://.*">
 <br/>
 {% endfor %}

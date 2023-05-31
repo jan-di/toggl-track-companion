@@ -8,7 +8,7 @@ from mongoengine import (
     IntField,
     DateField,
     DateTimeField,
-    EmbeddedDocumentField,
+    EmbeddedDocumentListField,
     ListField,
     BooleanField,
     ReferenceField,
@@ -72,7 +72,7 @@ class User(BaseDocument):
     default_workspace = ReferenceField(
         Workspace, db_field="default_workspace_id", required=True
     )
-    workspaces = ListField(EmbeddedDocumentField(UserWorkspace))
+    workspaces = EmbeddedDocumentListField(UserWorkspace)
     fetched_at = DateTimeField(required=True)
     next_sync_at = DateTimeField(required=True)
     name = StringField(required=True)
