@@ -1,8 +1,8 @@
 from os import path
 from functools import wraps
+from datetime import datetime
 from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
-from datetime import datetime, date
 
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User, Workspace
