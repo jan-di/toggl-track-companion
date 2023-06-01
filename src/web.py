@@ -1,11 +1,12 @@
 from os import path
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, date
 from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
 
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User, Workspace
+from src.schedule import Resolver
 
 
 class FlaskApp:
@@ -77,6 +78,39 @@ class FlaskApp:
             return render_template(
                 "profile.html.j2", user=user, toggl_api_class=TogglApi
             )
+
+        @self.app.route("/detailed-report/<workspace_id>")
+        @self.__require_auth
+        def report(workspace_id):
+            user = User.objects.get(user_id=session["user_id"])
+
+            workspace = Workspace.objects.get(workspace_id=workspace_id)
+            user_workspace = user.workspaces.get(workspace=workspace)
+
+            print(workspace)
+
+            report = Resolver.create_report(
+                user, workspace, user_workspace.start_of_aggregation, date.today()
+            )
+
+            return render_template("detailed_report.html.j2", user=user, report=report)
+
+        @self.app.template_filter()
+        def format_percentage(number: float, precision: int = 2):
+            if number is None:
+                return "---%"
+            return f"{round(float(number) * 100, precision)}%"
+
+        @self.app.template_filter()
+        def format_time(total_seconds: int):
+            minutes, seconds = divmod(abs(total_seconds), 60)
+            hours, minutes = divmod(minutes, 60)
+
+            result = f"{hours:02}:{minutes:02}:{seconds:02}"
+            muted_length = len(result) - len(result.lstrip(":0"))
+            if muted_length > 0:
+                result = f'<span class="text-muted">{result[:muted_length]}</span>{result[muted_length:]}'
+            return f'{"-" if total_seconds < 0 else "&nbsp;"}{result}'
 
     def run(self):
         self.app.run(debug=True, use_reloader=False, host="0.0.0.0")

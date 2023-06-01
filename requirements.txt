@@ -67,7 +67,9 @@ pylint-plugin-utils==0.7
 pymongo==4.3.3
     # via mongoengine
 python-dateutil==2.8.2
-    # via icalendar
+    # via
+    #   -r requirements.in
+    #   icalendar
 python-dotenv==0.21.1
     # via -r requirements.in
 pytz==2023.3

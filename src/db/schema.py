@@ -155,5 +155,5 @@ class Event(Document):
     name = StringField(required=True)
     start_date = DateField(required=True)
     rrule = StringField()
-    factor = FloatField(required=True)
-    addend = IntField(required=True)
+    mod_relative = FloatField(required=True)
+    mod_absolute = IntField(required=True)

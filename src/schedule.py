@@ -1,8 +1,343 @@
+from datetime import date, datetime, timedelta
 import re
 import httpx
+from dateutil.rrule import rrulestr
+from dateutil.relativedelta import relativedelta
 from icalendar import Calendar
 from mongoengine import Document
-from src.db.schema import User, Workspace, Schedule, Event
+from mongoengine.queryset.visitor import Q
+from src.db.schema import User, Workspace, Schedule, Event, TimeEntry
+
+
+class Day:
+    def __init__(self, day_date: date):
+        self.date = day_date
+        self.schedules = set()
+        self.events = set()
+        self.time_entry_slices = set()
+
+    @classmethod
+    def get_id_by_day(cls, day: date) -> str:
+        return day.strftime("%Y-%m-%d")
+
+    def get_id(self) -> str:
+        return Day.get_id_by_day(self.date)
+
+    def target_time(self) -> int:
+        target_base = sum(map(lambda s: s.target, self.schedules))
+        target_mod_relative = 1 + sum(map(lambda e: e.mod_relative, self.events))
+        target_mod_absolute = sum(map(lambda e: e.mod_absolute, self.events))
+
+        return int(target_base * target_mod_relative + target_mod_absolute)
+
+    def actual_time(self) -> int:
+        return sum(map(lambda tes: tes.get_duration(), self.time_entry_slices))
+
+    def delta(self) -> int:
+        return self.actual_time() - self.target_time()
+
+    def __repr__(self):
+        return (
+            "<Day("
+            f"date={self.date};"
+            f"target_time={self.target_time()};"
+            f"actual_time={self.actual_time()})>"
+        )
+
+
+class TimeEntrySlice:
+    def __init__(self, time_entry: TimeEntry, start: datetime, end: datetime) -> None:
+        self.time_entry = time_entry
+        self.start = start
+        self.end = end
+
+    def get_duration(self):
+        return int((self.end - self.start).total_seconds())
+
+
+class DayAggregate:
+    def __init__(self, start_date: date, end_date: date):
+        self.days = set()
+        self.start = start_date
+        self.end = end_date
+        self.max_days = (end_date - start_date).days + 1
+
+    @classmethod
+    def get_key_from_date(cls, day_date: date) -> tuple:
+        raise NotImplementedError("Not implemented!")
+
+    def days_with_target_time(self) -> tuple:
+        return len(set(filter(lambda day: day.target_time() > 0, self.days)))
+
+    def days_with_actual_time(self) -> tuple:
+        return len(set(filter(lambda day: day.actual_time() > 0, self.days)))
+
+    def get_key(self) -> tuple:
+        return __class__.get_key_from_date(self.start)
+
+    def target_time(self) -> int:
+        return sum(map(lambda x: x.target_time(), self.days))
+
+    def actual_time(self) -> int:
+        return sum(map(lambda x: x.actual_time(), self.days))
+
+    def delta(self) -> int:
+        return self.actual_time() - self.target_time()
+
+
+class Week(DayAggregate):
+    def __init__(self, year: int, week: int):
+        start = date.fromisocalendar(year, week, 1)
+        end = date.fromisocalendar(year, week, 7)
+        super().__init__(start, end)
+        self.year = year
+        self.week = week
+
+    @classmethod
+    def get_key_from_date(cls, day_date: date) -> tuple:
+        isocal = day_date.isocalendar()
+        return isocal.year, isocal.week
+
+    def get_key(self) -> tuple:
+        return __class__.get_key_from_date(self.start)
+
+    def __repr__(self):
+        return (
+            "<Week("
+            f"key={self.get_key()};"
+            f"target_time={self.target_time()};"
+            f"actual_time={self.actual_time()})>"
+        )
+
+
+class Month(DayAggregate):
+    def __init__(self, year: int, month: int):
+        start = date(year, month, 1)
+        end = (start.replace(day=28) + timedelta(days=4)).replace(day=1) + timedelta(
+            days=-1
+        )
+        super().__init__(start, end)
+        self.year = year
+        self.month = month
+
+    @classmethod
+    def get_key_from_date(cls, day_date: date) -> tuple:
+        return day_date.year, day_date.month
+
+    def get_key(self) -> tuple:
+        return __class__.get_key_from_date(self.start)
+
+    def __repr__(self):
+        return (
+            "<Month("
+            f"key={self.get_key()};"
+            f"target_time={self.target_time()};"
+            f"actual_time={self.actual_time()})>"
+        )
+
+
+class Quarter(DayAggregate):
+    def __init__(self, year: int, quarter: int):
+        start = date(year, (quarter - 1) * 3 + 1, 1)
+        end = (
+            (start + relativedelta(months=2)).replace(day=28) + timedelta(days=4)
+        ).replace(day=1) + timedelta(days=-1)
+        super().__init__(start, end)
+        self.year = year
+        self.quarter = quarter
+
+    @classmethod
+    def get_key_from_date(cls, day_date: date) -> tuple:
+        return day_date.year, (day_date.month - 1) // 3 + 1
+
+    def get_key(self) -> tuple:
+        return __class__.get_key_from_date(self.start)
+
+    def __repr__(self):
+        return (
+            "<Quarter("
+            f"key={self.get_key()};"
+            f"target_time={self.target_time()};"
+            f"actual_time={self.actual_time()})>"
+        )
+
+
+class Report:
+    def __init__(
+        self,
+        user: User,
+        workspace: Workspace,
+        start_date: date,
+        end_date: date,
+        days: dict,
+    ) -> None:
+        self.user = user
+        self.workspace = workspace
+        self.start_date = start_date
+        self.end_date = end_date
+        self.days = days
+        self.weeks = {}
+        self.months = {}
+        self.quarters = {}
+
+    def running_delta(self):
+        running_delta = 0
+        for day in self.days.values():
+            running_delta += day.delta()
+
+        return running_delta
+
+
+class Resolver:
+    TIMEZONE_TOLERANCE_HOURS = 15
+
+    @classmethod
+    def create_report(
+        cls, user: User, workspace: Workspace, start_date: date, end_date: date
+    ):
+        report = Report(
+            user=user,
+            workspace=workspace,
+            start_date=start_date,
+            end_date=end_date,
+            days=Resolver.init_day_objects(start_date, end_date),
+        )
+
+        # process schedules
+        schedules = Schedule.objects(user=user, workspace=workspace)
+        for schedule in schedules:
+            Resolver.apply_schedule(report.days, schedule, start_date, end_date)
+
+        # process events
+        events = Event.objects(user=user, workspace=workspace)
+        for event in events:
+            Resolver.apply_event(report.days, event, start_date, end_date)
+
+        # process time entries
+        timezone_tolerance = timedelta(hours=__class__.TIMEZONE_TOLERANCE_HOURS)
+        start_date_with_offset = (
+            datetime.combine(start_date, datetime.min.time()) - timezone_tolerance
+        )
+        end_date_with_offset = (
+            datetime.combine(end_date, datetime.min.time()) + timezone_tolerance
+        )
+
+        time_entries = TimeEntry.objects(
+            Q(started_at__gte=start_date_with_offset)
+            & Q(started_at__lte=end_date_with_offset)
+            | Q(stopped_at__gte=start_date_with_offset)
+            & Q(stopped_at__lte=end_date_with_offset)
+            | Q(started_at__lte=start_date_with_offset)
+            & Q(stopped_at__gte=end_date_with_offset)
+        )
+        for time_entry in time_entries:
+            Resolver.apply_time_entry(report.days, time_entry)
+
+        # aggregate days
+        for day in report.days.values():
+            week_key = Week.get_key_from_date(day.date)
+            if week_key not in report.weeks:
+                report.weeks[week_key] = Week(*week_key)
+            report.weeks[week_key].days.add(day)
+
+            month_key = Month.get_key_from_date(day.date)
+            if month_key not in report.months:
+                report.months[month_key] = Month(*month_key)
+            report.months[month_key].days.add(day)
+
+            quarter_key = Quarter.get_key_from_date(day.date)
+            if quarter_key not in report.quarters:
+                report.quarters[quarter_key] = Quarter(*quarter_key)
+            report.quarters[quarter_key].days.add(day)
+
+        return report
+
+    @classmethod
+    def apply_schedule(
+        cls, days: list[Day], schedule: Schedule, start_date: date, end_date: date
+    ):
+        start_dt = datetime.combine(start_date, datetime.min.time())
+        end_dt = datetime.combine(end_date, datetime.min.time())
+
+        if schedule.rrule is not None:
+            rrule = rrulestr(schedule.rrule, dtstart=schedule.start_date)
+            apply_dates = list(rrule.between(start_dt, end_dt, inc=True))
+        else:
+            apply_dates = [schedule.start_date]
+
+        for apply_date in apply_dates:
+            day_key = Day.get_id_by_day(apply_date)
+            if day_key in days:
+                days[day_key].schedules.add(schedule)
+
+    @classmethod
+    def apply_event(
+        cls, days: list[Day], event: Event, start_date: date, end_date: date
+    ):
+        start_dt = datetime.combine(start_date, datetime.min.time())
+        end_dt = datetime.combine(end_date, datetime.min.time())
+
+        if event.rrule is not None:
+            rrule = rrulestr(event.rrule, dtstart=event.start_date)
+            apply_dates = list(rrule.between(start_dt, end_dt, inc=True))
+        else:
+            apply_dates = [event.start_date]
+
+        for apply_date in apply_dates:
+            day_key = Day.get_id_by_day(apply_date)
+            if day_key in days:
+                days[day_key].events.add(event)
+
+    @classmethod
+    def apply_time_entry(cls, days: list[Day], time_entry: TimeEntry):
+        started_at_local = time_entry.started_at + timedelta(
+            seconds=time_entry.started_at_offset
+        )
+        stopped_at_local = time_entry.stopped_at + timedelta(
+            seconds=time_entry.stopped_at_offset
+        )
+
+        last_slice = False
+        while True:
+            if started_at_local.date() == stopped_at_local.date():
+                time_entry_slice = TimeEntrySlice(
+                    time_entry, started_at_local, stopped_at_local
+                )
+                last_slice = True
+            else:
+                next_midnight = started_at_local.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                ) + timedelta(days=1)
+                time_entry_slice = TimeEntrySlice(
+                    time_entry, started_at_local, next_midnight
+                )
+                started_at_local = next_midnight
+
+            day_key = Day.get_id_by_day(time_entry_slice.start.date())
+            if day_key in days:
+                days[day_key].time_entry_slices.add(time_entry_slice)
+
+            if last_slice:
+                break
+
+    @classmethod
+    def init_day_objects(cls, start_date: date, end_date: date) -> dict[Day]:
+        day_dates = Resolver.get_date_range(start_date, end_date)
+        result = {}
+        for day_date in day_dates:
+            day = Day(day_date)
+            result[day.get_id()] = day
+        return result
+
+    @classmethod
+    def get_date_range(cls, start: date, end: date) -> list[date]:
+        delta = end - start
+        result = []
+        for i in range(delta.days + 1):
+            day_date = start + timedelta(days=i)
+            result.append(day_date)
+
+        return result
 
 
 class CalendarSync:
@@ -10,13 +345,13 @@ class CalendarSync:
     TYPE_SCHEDULE = "schedule"
     TYPE_EVENT = "event"
     ANNOTATION_PATTERN = re.compile(
-        r"^(?:<span>)*"
+        r"^(?:<span>|<br/?>)*"
         + ANNOTATION_PREFIX
         + r"("
         + TYPE_SCHEDULE
         + r"|"
         + TYPE_EVENT
-        + r")((?::\w+=\w+)+)(?:</span>)*$"
+        + r")((?::\w+=[\w\.-]+)+)(?:</span>|<br/?>)*$"
     )
 
     def fetch_calendar(self, url: str) -> Calendar:
@@ -93,8 +428,8 @@ class CalendarSync:
             event = events[component["UID"]]
 
         event.name = component["SUMMARY"]
-        event.factor = float(annotation_options.get("factor", 1.0))
-        event.addend = int(annotation_options.get("addend", 0))
+        event.mod_relative = float(annotation_options.get("rel", 0.0))
+        event.mod_absolute = int(annotation_options.get("abs", 0))
         event.start_date = component["DTSTART"].dt
         if "RRULE" in component:
             event.rrule = component["RRULE"].to_ical().decode()
