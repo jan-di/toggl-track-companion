@@ -87,8 +87,6 @@ class FlaskApp:
             workspace = Workspace.objects.get(workspace_id=workspace_id)
             user_workspace = user.workspaces.get(workspace=workspace)
 
-            print(workspace)
-
             report = Resolver.create_report(
                 user, workspace, user_workspace.start_of_aggregation, date.today()
             )
