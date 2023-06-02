@@ -21,7 +21,9 @@ class FlaskApp:
         @self.app.route("/")
         @self.__require_auth
         def index():
-            return render_template("index.html.j2")
+            user = User.objects.get(user_id=session["user_id"])
+
+            return render_template("index.html.j2", user=user)
 
         @self.app.route("/login", methods=["GET", "POST"])
         def login():
