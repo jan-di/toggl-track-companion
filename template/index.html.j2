@@ -1,0 +1,19 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
+<h1>Index</h1>
+
+<h2>Reports</h2>
+
+{% for user_workspace in user.workspaces %}
+    <h3>{{ user_workspace.workspace.organization.name }} » <img style="width: 1em;" src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.name }}</h3>
+
+    <ul>
+        <li><a href="{{ url_for("report", workspace_id=user_workspace.workspace.workspace_id) }}">Detailed Report</a></li>
+    </ul>
+
+<br/>
+{% endfor %}
+
+{% endblock content %}

@@ -1,8 +1,8 @@
 name: Build Docker Images
 
 env:
-  DOCKERHUB_TAG: 'docker.io/jandi/toggl-robot'
-  GITHUB_TAG: 'ghcr.io/jan-di/toggl-robot'
+  DOCKERHUB_TAG: 'docker.io/jandi/toggl-track-companion'
+  GITHUB_TAG: 'ghcr.io/jan-di/toggl-track-companion'
   PLATFORMS: linux/amd64,linux/arm64
 
 on:

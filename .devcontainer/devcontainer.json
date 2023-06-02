@@ -2,7 +2,7 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.245.2/containers/python-3-postgres
 // Update the VARIANT arg in docker-compose.yml to pick a Python version
 {
-	"name": "Python 3 & PostgreSQL",
+	"name": "Python 3",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "app",
 	"workspaceFolder": "/workspace",
@@ -25,12 +25,16 @@
 				"python.linting.pycodestylePath": "/usr/local/py-utils/bin/pycodestyle",
 				"python.linting.pydocstylePath": "/usr/local/py-utils/bin/pydocstyle",
 				"python.linting.pylintPath": "/usr/local/py-utils/bin/pylint",
-				"python.testing.pytestPath": "/usr/local/py-utils/bin/pytest"
+				"python.testing.pytestPath": "/usr/local/py-utils/bin/pytest",
+				"editor.defaultFormatter": "ms-python.black-formatter",
+				"editor.formatOnSave": true
 			},
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-python.python",
+				"ms-python.pylint",
 				"ms-python.vscode-pylance",
+				"ms-python.black-formatter",
 				"wholroyd.jinja"
 			]
 		}
@@ -38,8 +42,8 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// This can be used to network with other containers or the host.
 	"forwardPorts": [
-		5000,
-		5432
+		5000, // web
+		27017 // mongodb
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "pip-sync",

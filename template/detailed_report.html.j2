@@ -2,11 +2,14 @@
 
 {% block content %}
 
-<h1>Text Report</h1>
+<h1>Detailed Report</h1>
 
-<pre>
-{{ text_report }}
-</pre>
+<p>
+Organization: {{ report.workspace.organization.name }}<br/>
+Workspace: {{ report.workspace.name }}<br/>
+Start: {{ report.start_date }}<br/>
+End: {{ report.end_date }}
+</p>
 
 <h2>Quarters</h2>
 <table class="table table-sm">
@@ -17,7 +20,6 @@
         <th>Target Time</th>
         <th>Actual Time</th>
         <th>Delta</th>
-        <th>Fullfillment Rate</th>
     </tr>
     {% for quarter in report.quarters.values() %}
     <tr>
@@ -27,7 +29,6 @@
         <td>{{ quarter.target_time() | format_time }}</td>
         <td>{{ quarter.actual_time() | format_time }}</td>
         <td>{{ quarter.delta() | format_time }}</td>
-        <td>{{ quarter.fullfillment_rate() | format_percentage }}</td>
     </tr>
     {% endfor %}
 </table>
@@ -41,7 +42,6 @@
         <th>Target Time</th>
         <th>Actual Time</th>
         <th>Delta</th>
-        <th>Fullfillment Rate</th>
     </tr>
     {% for month in report.months.values() %}
     <tr>
@@ -51,7 +51,6 @@
         <td>{{ month.target_time() | format_time }}</td>
         <td>{{ month.actual_time() | format_time }}</td>
         <td>{{ month.delta() | format_time }}</td>
-        <td>{{ month.fullfillment_rate() | format_percentage }}</td>
     </tr>
     {% endfor %}
 </table>
@@ -65,7 +64,6 @@
         <th>Target Time</th>
         <th>Actual Time</th>
         <th>Delta</th>
-        <th>Fullfillment Rate</th>
     </tr>
     {% for week in report.weeks.values() %}
     <tr>
@@ -75,7 +73,6 @@
         <td>{{ week.target_time() | format_time }}</td>
         <td>{{ week.actual_time() | format_time }}</td>
         <td>{{ week.delta() | format_time }}</td>
-        <td>{{ week.fullfillment_rate() | format_percentage }}</td>
     </tr>
     {% endfor %}
 </table>
@@ -89,19 +86,27 @@
         <th>Target Time</th>
         <th>Actual Time</th>
         <th>Delta</th>
-        <th>Fullfillment Rate</th>
+        <th>Events</th>
     </tr>
     {% for day in report.days.values() %}
     <tr>
         <td>{{ day.date }}</td>
         <td>{{ day.date.weekday() }}</td>
-        <td>{{ day.time_entries }}</td>
-        <td>{{ day.target_time | format_time }}</td>
-        <td>{{ day.actual_time | format_time }}</td>
+        <td>{{ day.time_entry_slices | length }}</td>
+        <td>{{ day.target_time() | format_time }}</td>
+        <td>{{ day.actual_time() | format_time }}</td>
         <td>{{ day.delta() | format_time }}</td>
-        <td>{{ day.fullfillment_rate() | format_percentage }}</td>
+        <td>{% if day.events | length > 0 %}
+            <ul>
+                {% for event in day.events %}
+                    <li>{{ event.name }} (rel={{ event.mod_relative}}; abs={{ event.mod_absolute}})</li>
+                {% endfor %}
+            </ul>
+        {% endif %}</td>
     </tr>
     {% endfor %}
 </table>
 
-{% endblock %}
+<p>Running Delta: {{ report.running_delta() | format_time }}</p>
+
+{% endblock content %}

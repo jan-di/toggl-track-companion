@@ -10,8 +10,7 @@ class Config:
             **os.environ,
         }
 
-        self.telegram_token = values.get("TELEGRAM_TOKEN")
         self.database_uri = values.get("DATABASE_URI")
         self.server_name = values.get("SERVER_NAME")
         self.session_secret = values.get("SESSION_SECRET")
-        self.toggl_token = values.get("TOGGL_TOKEN")  # to be removed
+        self.sync_interval = int(values.get("SYNC_INTERVAL", 86400))

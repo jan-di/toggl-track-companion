@@ -2,26 +2,26 @@
 
 from os import path
 
-from src.web import FlaskApp
 from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
+from src.updater import Updater
 
 
-def main() -> None:
+def main():
     Log.init()
     logger = Log.get_logger("root")
-    logger.info("Starting web..")
+    logger.info("Starting updater..")
 
     script_dir = path.dirname(path.realpath(__file__))
     config = Config(path.join(script_dir, ".env"))
     Database.connect(config.database_uri)
 
-    app = FlaskApp(config.server_name, config.session_secret, script_dir)
-    app.run()
+    updater = Updater(config.sync_interval)
+    updater.run()
 
     Database.disconnect()
-    logger.info("Exiting web..")
+    logger.info("Exiting updater..")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,60 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
+
+
+<h1>Profile</h1>
+
+<div class="row mb-4">
+  <div class="card col-lg-4 px-0">
+    <div class="card-header">
+      <div class="d-flex flex-row">
+        <div class="me-3">
+          <img src="{{ user.image_url }}" style="width: 5rem;" />
+        </div>
+        <div class="">
+          <h5 class="card-title mb-0">{{ user.name }}</h5>
+          <h5 class="card-title">{{ user.email }}</h5>
+          <h6 class="card-subtitle text-muted">Toggl Track</h6>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="d-flex justify-content-evenly">
+        <a href="https://track.toggl.com/profile" class="card-link">View on Toggl Track</a>
+        <a href="#" onclick="alert('not implemented yet')">Delete Profile</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Workspaces</h2>
+
+<form method="post">
+{% for user_workspace in user.workspaces %}
+  <h3><img style="width: 1em;" src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.organization.name }} » {{ user_workspace.workspace.name }}</h3>
+
+  <label class="form-label" for="start">Start of aggration:</label>
+  <input class="form-control mb-3" type="date" 
+      id="{{ user_workspace.workspace.id }}-start-of-aggregation" 
+      name="{{ user_workspace.workspace.id }}-start-of-aggregation" 
+      value="{{user_workspace.start_of_aggregation }}" 
+      min="{{ toggl_api_class.MIN_YEAR }}-01-01">
+
+  <label class="form-label" for="url">Schedule calendar url</label>
+  <input class="form-control mb-3" type="url" id="{{ user_workspace.workspace.id }}-schedule-calendar-url"
+      name="{{ user_workspace.workspace.id }}-schedule-calendar-url"
+      value="{{user_workspace.schedule_calendar_url }}"
+      pattern="https://.*">
+
+  <button type="submit" class="btn btn-primary">Save</button>
+<br/>
+{% endfor %}
+
+
+
+</form>
+
+{% endblock content %}
