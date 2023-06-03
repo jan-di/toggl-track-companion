@@ -17,7 +17,7 @@ def main():
     config = Config(path.join(script_dir, ".env"))
     Database.connect(config.database_uri)
 
-    updater = Updater(config.sync_interval)
+    updater = Updater(config.sync_interval_calendar, config.sync_interval_toggl)
     updater.run()
 
     Database.disconnect()

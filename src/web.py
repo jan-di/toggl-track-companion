@@ -6,7 +6,7 @@ from httpx import HTTPStatusError
 
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User, Workspace
-from src.schedule import Resolver
+from src.schedule import Resolver, CalendarSync
 
 
 class FlaskApp:
@@ -69,13 +69,17 @@ class FlaskApp:
 
                     match name:
                         case "start-of-aggregation":
-                            user_workspace.start_of_aggregation = datetime.strptime(
-                                value, "%Y-%m-%d"
-                            ).date()
+                            if len(value) > 0:
+                                user_workspace.start_of_aggregation = datetime.strptime(
+                                    value, "%Y-%m-%d"
+                                ).date()
                         case "schedule-calendar-url":
-                            user_workspace.schedule_calendar_url = value
+                            user_workspace.schedule_calendar_url = (
+                                value if len(value) > 1 else None
+                            )
 
-                    user.save()
+                    cal_sync = CalendarSync()
+                    user = cal_sync.update_user(user, 0)
 
             return render_template(
                 "profile.html.j2", user=user, toggl_api_class=TogglApi

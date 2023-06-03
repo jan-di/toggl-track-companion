@@ -41,12 +41,13 @@
       id="{{ user_workspace.workspace.id }}-start-of-aggregation" 
       name="{{ user_workspace.workspace.id }}-start-of-aggregation" 
       value="{{user_workspace.start_of_aggregation }}" 
-      min="{{ toggl_api_class.MIN_YEAR }}-01-01">
+      min="{{ toggl_api_class.MIN_YEAR }}-01-01"
+      required>
 
   <label class="form-label" for="url">Schedule calendar url</label>
   <input class="form-control mb-3" type="url" id="{{ user_workspace.workspace.id }}-schedule-calendar-url"
       name="{{ user_workspace.workspace.id }}-schedule-calendar-url"
-      value="{{user_workspace.schedule_calendar_url }}"
+      value="{{user_workspace.schedule_calendar_url | default("", true) }}"
       pattern="https://.*">
 
   <button type="submit" class="btn btn-primary">Save</button>

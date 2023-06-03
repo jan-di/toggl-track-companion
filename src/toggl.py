@@ -17,7 +17,7 @@ from src.db.schema import (
 
 class TogglApi:
     MIN_YEAR = 2006
-    
+
     def __init__(
         self,
         api_token: str = None,
@@ -133,15 +133,18 @@ class TogglApi:
 
 class TogglUpdater:
     def create_or_update_user_from_api(
-        self, user_data: dict, next_sync: int = 0
+        self,
+        user_data: dict,
+        next_toggl_sync: int = 0,
     ) -> User:
         try:
             user = User.objects.get(user_id=user_data["id"])
-            user.next_sync_at = datetime.now() + timedelta(seconds=next_sync)
         except DoesNotExist:
             user = User()
             user.user_id = user_data["id"]
-            user.next_sync_at = datetime.now()
+            user.next_calendar_sync_at = datetime.now()
+
+        user.next_toggl_sync_at = datetime.now() + timedelta(seconds=next_toggl_sync)
 
         user.fetched_at = datetime.now()
         user.name = user_data["fullname"]
@@ -157,16 +160,22 @@ class TogglUpdater:
     def update_user_workspaces_from_api(
         self, user: User, workspace_dataset: list
     ) -> User:
-        indexed_workspace_dataset = {wd["id"]:wd for wd in workspace_dataset}
-        indexed_workspaces = {w.workspace.id:w for w in user.workspaces}
-        keys_to_delete = set(indexed_workspaces.keys()) - set(indexed_workspace_dataset.keys())
-        keys_to_add = set(indexed_workspace_dataset.keys()) - set(indexed_workspaces.keys())
+        indexed_workspace_dataset = {wd["id"]: wd for wd in workspace_dataset}
+        indexed_workspaces = {w.workspace.id: w for w in user.workspaces}
+        keys_to_delete = set(indexed_workspaces.keys()) - set(
+            indexed_workspace_dataset.keys()
+        )
+        keys_to_add = set(indexed_workspace_dataset.keys()) - set(
+            indexed_workspaces.keys()
+        )
 
         for key in keys_to_delete:
             del indexed_workspaces[key]
 
         for key in keys_to_add:
-            indexed_workspaces[key] = UserWorkspace(workspace=Workspace.to_dbref_pk(key))
+            indexed_workspaces[key] = UserWorkspace(
+                workspace=Workspace.to_dbref_pk(key)
+            )
             indexed_workspaces[key].start_of_aggregation = date.today()
 
         user.workspaces = list(indexed_workspaces.values())

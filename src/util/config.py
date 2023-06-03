@@ -11,6 +11,7 @@ class Config:
         }
 
         self.database_uri = values.get("DATABASE_URI")
-        self.server_name = values.get("SERVER_NAME")
-        self.session_secret = values.get("SESSION_SECRET")
-        self.sync_interval = int(values.get("SYNC_INTERVAL", 86400))
+        self.flask_server_name = values.get("FLASK_SERVER_NAME")
+        self.flask_session_secret = values.get("FLASK_SESSION_SECRET")
+        self.sync_interval_calendar = int(values.get("SYNC_INTERVAL_CALENDAR", 3600))
+        self.sync_interval_toggl = int(values.get("SYNC_INTERVAL_TOGGL", 86400))

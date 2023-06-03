@@ -17,7 +17,7 @@ def main() -> None:
     config = Config(path.join(script_dir, ".env"))
     Database.connect(config.database_uri)
 
-    app = FlaskApp(config.server_name, config.session_secret, script_dir)
+    app = FlaskApp(config.flask_server_name, config.flask_session_secret, script_dir)
     app.run()
 
     Database.disconnect()

@@ -437,3 +437,8 @@ class CalendarSync:
             event.rrule = None
 
         return event, created
+    
+    def update_user(self, user: User, next_calendar_sync: int) -> User:
+        user.next_calendar_sync_at = datetime.now() + timedelta(seconds=next_calendar_sync)
+        
+        return user.save()
