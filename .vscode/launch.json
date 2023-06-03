@@ -26,7 +26,7 @@
             "name": "Web",
             "type": "python",
             "request": "launch",
-            "program": "web.py",
+            "program": "web_dev.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },

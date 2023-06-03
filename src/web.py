@@ -140,7 +140,7 @@ class FlaskApp:
         def inject_humanize():
             return {"humanize": humanize}
 
-    def run(self):
+    def run_debug(self):
         self.app.run(debug=True, use_reloader=False, host="0.0.0.0")
 
     def get_context(self):

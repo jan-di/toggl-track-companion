@@ -5,7 +5,7 @@ component=$1
 start_web () {
   echo "Start Web"
 
-  python3 web.py
+  gunicorn 'web_prod:get_app()'
 }
 
 start_updater () {
