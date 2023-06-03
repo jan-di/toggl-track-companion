@@ -16,6 +16,7 @@ def main() -> None:
 
     script_dir = path.dirname(path.realpath(__file__))
     config = Config(path.join(script_dir, ".env"))
+    logger.setLevel(config.log_level)
     Database.connect(config.database_uri)
 
     app = FlaskApp(config.flask_server_name, config.flask_session_secret, script_dir)

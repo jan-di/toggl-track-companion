@@ -16,6 +16,7 @@ def main():
 
     script_dir = path.dirname(path.realpath(__file__))
     config = Config(path.join(script_dir, ".env"))
+    logger.setLevel(config.log_level)
     Database.connect(config.database_uri)
 
     updater = Updater(config.sync_interval_calendar, config.sync_interval_toggl)

@@ -13,6 +13,7 @@ logger.info("Start web_prod @%s (%s)", version.VERSION, version.COMMIT)
 
 script_dir = path.dirname(path.realpath(__file__))
 config = Config(path.join(script_dir, ".env"))
+logger.setLevel(config.log_level)
 
 
 def get_app() -> Flask:
