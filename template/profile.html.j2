@@ -24,11 +24,59 @@
     <div class="card-body">
       <div class="d-flex justify-content-evenly">
         <a href="https://track.toggl.com/profile" class="card-link">View on Toggl Track</a>
-        <a href="#" onclick="alert('not implemented yet')">Delete Profile</a>
+        <a href="#" onclick="alert('Not implemented yet. Please contact me.')">Delete Profile</a>
       </div>
     </div>
   </div>
 </div>
+
+<h2>Sync Status</h2>
+
+<table class="table table-sm">
+<thead>
+    <tr>
+      <th scope="col"></th>
+      <th scope="col">Last sync</th>
+      <th scope="col">Next sync</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">Toggl Data</th>
+      <td>
+      {% if user.last_toggl_sync_at is not none %}
+        <span data-bs-toggle="tooltip" data-bs-placement="top" 
+          data-bs-title="{{ user.last_toggl_sync_at | as_timezone(user.timezone) | format_datetime() }}">
+        {{ humanize.naturaltime(user.last_toggl_sync_at,when=now) }}</span>
+      {% else %}
+        never
+      {% endif %}
+      </td>
+      <td>
+        <span data-bs-toggle="tooltip" data-bs-placement="top" 
+          data-bs-title="{{ [user.next_toggl_sync_at, now] | max | as_timezone(user.timezone) | format_datetime() }}">
+        {{ humanize.naturaltime([user.next_toggl_sync_at, now] | max,when=now) }}</span>
+      </td>
+    </tr>
+    <tr>
+      <th scope="row">Calendar Schedule</th>
+      <td>
+      {% if user.last_calendar_sync_at is not none %}
+        <span data-bs-toggle="tooltip" data-bs-placement="top" 
+          data-bs-title="{{ user.last_calendar_sync_at | as_timezone(user.timezone) | format_datetime() }}">
+        {{ humanize.naturaltime(user.last_calendar_sync_at,when=now) }}</span>
+      {% else %}
+        never
+      {% endif %}
+      </td>
+      <td>
+        <span data-bs-toggle="tooltip" data-bs-placement="top" 
+          data-bs-title="{{ [user.next_calendar_sync_at, now] | max | as_timezone(user.timezone) | format_datetime() }}">
+        {{ humanize.naturaltime([user.next_calendar_sync_at, now] | max,when=now) }}</span>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <h2>Workspaces</h2>
 
@@ -37,20 +85,22 @@
   <h3><img style="width: 1em;" src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.organization.name }} » {{ user_workspace.workspace.name }}</h3>
 
   <label class="form-label" for="start">Start of aggration:</label>
-  <input class="form-control mb-3" type="date" 
+  <input class="form-control" type="date" 
       id="{{ user_workspace.workspace.id }}-start-of-aggregation" 
       name="{{ user_workspace.workspace.id }}-start-of-aggregation" 
       value="{{user_workspace.start_of_aggregation }}" 
       min="{{ toggl_api_class.MIN_YEAR }}-01-01"
       required>
+  <div class="form-text">For all cumulative and running sums we use this date as a start.</div>
 
-  <label class="form-label" for="url">Schedule calendar url</label>
-  <input class="form-control mb-3" type="url" id="{{ user_workspace.workspace.id }}-schedule-calendar-url"
+  <label class="form-label mt-3" for="url">Schedule calendar url</label>
+  <input class="form-control" type="url" id="{{ user_workspace.workspace.id }}-schedule-calendar-url"
       name="{{ user_workspace.workspace.id }}-schedule-calendar-url"
       value="{{user_workspace.schedule_calendar_url | default("", true) }}"
       pattern="https://.*">
+  <div class="form-text">The URL should point to a ical file that contains your work schedule.</div>
 
-  <button type="submit" class="btn btn-primary">Save</button>
+  <button type="submit" class="btn btn-primary mt-3">Save</button>
 <br/>
 {% endfor %}
 

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 import re
 import httpx
 from dateutil.rrule import rrulestr
@@ -64,7 +64,7 @@ class DayAggregate:
 
     @classmethod
     def get_key_from_date(cls, day_date: date) -> tuple:
-        raise NotImplementedError("Not implemented!")
+        raise NotImplementedError("Not implemented yet!")
 
     def days_with_target_time(self) -> tuple:
         return len(set(filter(lambda day: day.target_time() > 0, self.days)))
@@ -437,8 +437,15 @@ class CalendarSync:
             event.rrule = None
 
         return event, created
-    
-    def update_user(self, user: User, next_calendar_sync: int) -> User:
-        user.next_calendar_sync_at = datetime.now() + timedelta(seconds=next_calendar_sync)
-        
+
+    def update_user(
+        self, user: User, next_calendar_sync: int, is_calendar_sync=False
+    ) -> User:
+        user.next_calendar_sync_at = datetime.now(timezone.utc) + timedelta(
+            seconds=next_calendar_sync
+        )
+
+        if is_calendar_sync:
+            user.last_calendar_sync_at = datetime.now(timezone.utc)
+
         return user.save()

@@ -1,8 +1,10 @@
 from os import path
 from functools import wraps
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
+import humanize
+import pytz
 
 import version
 from src.toggl import TogglApi, TogglUpdater
@@ -118,13 +120,25 @@ class FlaskApp:
                 result = f'<span class="text-muted">{result[:muted_length]}</span>{result[muted_length:]}'
             return f'{"-" if total_seconds < 0 else "&nbsp;"}{result}'
 
+        @self.app.template_filter()
+        def format_datetime(input_dt: datetime):
+            return input_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        @self.app.template_filter()
+        def as_timezone(input_dt: datetime, timezone_str: str):
+            return input_dt.astimezone(pytz.timezone(timezone_str))
+
         @self.app.context_processor
         def inject_now():
-            return {"now": datetime.now()}
+            return {"now": datetime.now(timezone.utc)}
 
         @self.app.context_processor
         def inject_version():
             return {"version": version}
+
+        @self.app.context_processor
+        def inject_humanize():
+            return {"humanize": humanize}
 
     def run(self):
         self.app.run(debug=True, use_reloader=False, host="0.0.0.0")

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 import time
 
 import httpx
@@ -133,20 +133,22 @@ class TogglApi:
 
 class TogglUpdater:
     def create_or_update_user_from_api(
-        self,
-        user_data: dict,
-        next_toggl_sync: int = 0,
+        self, user_data: dict, next_toggl_sync: int = 0, is_toggl_sync=False
     ) -> User:
         try:
             user = User.objects.get(user_id=user_data["id"])
         except DoesNotExist:
             user = User()
             user.user_id = user_data["id"]
-            user.next_calendar_sync_at = datetime.now()
+            user.next_calendar_sync_at = datetime.now(timezone.utc)
 
-        user.next_toggl_sync_at = datetime.now() + timedelta(seconds=next_toggl_sync)
+        user.next_toggl_sync_at = datetime.now(timezone.utc) + timedelta(
+            seconds=next_toggl_sync
+        )
+        if is_toggl_sync:
+            user.last_toggl_sync_at = datetime.now(timezone.utc)
 
-        user.fetched_at = datetime.now()
+        user.fetched_at = datetime.now(timezone.utc)
         user.name = user_data["fullname"]
         user.email = user_data["email"]
         user.image_url = user_data["image_url"]
@@ -154,6 +156,7 @@ class TogglUpdater:
         user.default_workspace = Workspace.to_dbref_pk(
             user_data["default_workspace_id"]
         )
+        user.timezone = user_data["timezone"]
 
         return user.save()
 
@@ -192,7 +195,7 @@ class TogglUpdater:
         except DoesNotExist:
             organization = Organization(organization_id=organization_data["id"])
 
-        organization.fetched_at = datetime.now()
+        organization.fetched_at = datetime.now(timezone.utc)
         organization.name = organization_data["name"]
 
         return organization.save()
@@ -215,7 +218,7 @@ class TogglUpdater:
                 ),
             )
 
-        workspace.fetched_at = datetime.now()
+        workspace.fetched_at = datetime.now(timezone.utc)
         workspace.name = workspace_data["name"]
         workspace.logo_url = workspace_data["logo_url"]
 
@@ -242,7 +245,7 @@ class TogglUpdater:
         start_dt = datetime.fromisoformat(time_entry_data["time_entries"][0]["start"])
         stop_dt = datetime.fromisoformat(time_entry_data["time_entries"][0]["stop"])
 
-        time_entry.fetched_at = datetime.now()
+        time_entry.fetched_at = datetime.now(timezone.utc)
         time_entry.description = time_entry_data["description"]
         time_entry.started_at = start_dt
         time_entry.started_at_offset = start_dt.utcoffset().total_seconds()
@@ -267,7 +270,7 @@ class TogglUpdater:
                 workspace=Workspace.to_dbref_pk(client_data["wid"]),
             )
 
-        client.fetched_at = datetime.now()
+        client.fetched_at = datetime.now(timezone.utc)
         client.name = client_data["name"]
         client.archived = client_data["archived"]
 
@@ -287,7 +290,7 @@ class TogglUpdater:
                 workspace=Workspace.to_dbref_pk(project_data["workspace_id"]),
             )
 
-        project.fetched_at = datetime.now()
+        project.fetched_at = datetime.timezone.utc
         project.name = project_data["name"]
         project.color = project_data["color"]
         project.client = Client.to_dbref_pk(project_data["client_id"])
@@ -308,7 +311,7 @@ class TogglUpdater:
                 workspace=Workspace.to_dbref_pk(tag_data["workspace_id"]),
             )
 
-        tag.fetched_at = datetime.now()
+        tag.fetched_at = datetime.now(timezone.utc)
         tag.name = tag_data["name"]
 
         return tag.save()

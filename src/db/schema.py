@@ -76,11 +76,14 @@ class User(BaseDocument):
     workspaces = EmbeddedDocumentListField(UserWorkspace)
     fetched_at = DateTimeField(required=True)
     next_calendar_sync_at = DateTimeField(required=True)
+    last_calendar_sync_at = DateTimeField()
     next_toggl_sync_at = DateTimeField(required=True)
+    last_toggl_sync_at = DateTimeField()
     name = StringField(required=True)
     email = StringField(required=True)
     image_url = StringField()
     api_token = StringField(required=True)
+    timezone = StringField(required=True)
 
     meta = {"collection": COLLECTION_NAME}
 

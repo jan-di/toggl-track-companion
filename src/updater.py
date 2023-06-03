@@ -1,7 +1,7 @@
 from threading import Event as ThreadingEvent
 import logging
 import signal
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from src.db.schema import (
     User,
@@ -45,7 +45,7 @@ class Updater:
         self.sync_calendars()
 
     def sync_toggl(self):
-        users = User.objects(next_toggl_sync_at__lte=datetime.now())
+        users = User.objects(next_toggl_sync_at__lte=datetime.now(timezone.utc))
         logging.info("Found %s users to sync with toggl track", len(users))
 
         if len(users) > 0:
@@ -69,7 +69,7 @@ class Updater:
                 # update user
                 user_data = toggl_api.get_me()
                 user = self.toggl_updater.create_or_update_user_from_api(
-                    user_data, self.sync_interval_toggl
+                    user_data, self.sync_interval_toggl, is_toggl_sync=True
                 )
                 users_updated += 1
 
@@ -236,7 +236,7 @@ class Updater:
             )
 
     def sync_calendars(self):
-        users = User.objects(next_calendar_sync_at__lte=datetime.now())
+        users = User.objects(next_calendar_sync_at__lte=datetime.now(timezone.utc))
         logging.info("Found %s users to sync with calendars", len(users))
 
         if len(users) > 0:
@@ -252,7 +252,9 @@ class Updater:
                 for user_workspace in user.workspaces:
                     if user_workspace.schedule_calendar_url is not None:
                         # update user
-                        user = cal_sync.update_user(user, self.sync_interval_calendar)
+                        user = cal_sync.update_user(
+                            user, self.sync_interval_calendar, is_calendar_sync=True
+                        )
 
                         # process ical file
                         workspace = user_workspace.workspace

@@ -43,7 +43,6 @@
         </nav>
         <main class="container">
             {% block content %} {% endblock %}
-            <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
         </main>
         <footer>
             <div class="container d-flex text-muted justify-content-evenly">
@@ -52,5 +51,7 @@
                 <span><a href="https://github.com/jan-di/toggl-track-companion">Source on GitHub</a></span>
             </div>
         </footer>
+        <script src="{{ url_for('static', filename='bootstrap.bundle.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='app.js') }}"></script>
     </body>
 </html>

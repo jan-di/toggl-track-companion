@@ -28,6 +28,8 @@ httpcore==0.17.2
     # via httpx
 httpx==0.24.1
     # via -r requirements.in
+humanize==4.6.0
+    # via -r requirements.in
 icalendar==5.0.7
     # via -r requirements.in
 idna==3.4
