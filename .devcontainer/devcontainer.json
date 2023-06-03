@@ -35,7 +35,8 @@
 				"ms-python.pylint",
 				"ms-python.vscode-pylance",
 				"ms-python.black-formatter",
-				"wholroyd.jinja"
+				"wholroyd.jinja",
+				"tamasfe.even-better-toml"
 			]
 		}
 	},
@@ -46,7 +47,7 @@
 		27017 // mongodb
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip-sync",
+	"postCreateCommand": "pip-sync requirements-dev.txt",
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode",
 	"features": {

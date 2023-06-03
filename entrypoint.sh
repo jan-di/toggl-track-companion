@@ -8,6 +8,12 @@ start_web () {
   python3 web.py
 }
 
+start_updater () {
+  echo "Start Updater"
+
+  python3 updater.py
+}
+
 unknown () {
   echo "Invalid Component"
 }
@@ -15,6 +21,9 @@ unknown () {
 case "$component" in
     web)
         start_web
+        ;;
+    updater)
+        start_updater
         ;;
     *)
         unknown

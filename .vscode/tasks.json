@@ -1,0 +1,12 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Upgrade dependencies",
+            "type": "shell",
+            "command": "pip-compile --upgrade --resolver=backtracking -o requirements.txt requirements.in && pip-compile --upgrade --resolver=backtracking -o requirements-dev.txt requirements.in requirements-dev.in"
+        }
+    ]
+}
