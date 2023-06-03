@@ -39,6 +39,7 @@ class FlaskApp:
                     user_data = toggl_api.get_me()
 
                     session["user_id"] = user_data["id"]
+                    session["user_name"] = user_data["fullname"]
                     next_url = request.args.get("next", url_for("index"))
 
                     toggl_updater.create_or_update_user_from_api(user_data)
@@ -49,7 +50,7 @@ class FlaskApp:
 
             return render_template("login.html.j2", error_msg=error_msg)
 
-        @self.app.route("/logout")
+        @self.app.route("/logout", methods=["POST"])
         @self.__require_auth
         def logout():
             del session["user_id"]
