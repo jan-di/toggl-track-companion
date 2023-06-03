@@ -290,7 +290,7 @@ class TogglUpdater:
                 workspace=Workspace.to_dbref_pk(project_data["workspace_id"]),
             )
 
-        project.fetched_at = datetime.timezone.utc
+        project.fetched_at = datetime.now(timezone.utc)
         project.name = project_data["name"]
         project.color = project_data["color"]
         project.client = Client.to_dbref_pk(project_data["client_id"])
