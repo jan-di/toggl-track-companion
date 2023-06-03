@@ -36,7 +36,8 @@
 				"ms-python.vscode-pylance",
 				"ms-python.black-formatter",
 				"wholroyd.jinja",
-				"tamasfe.even-better-toml"
+				"tamasfe.even-better-toml",
+				"esbenp.prettier-vscode"
 			]
 		}
 	},
