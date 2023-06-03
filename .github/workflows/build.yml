@@ -69,3 +69,6 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           cache-from: type=registry,ref=${{ env.GITHUB_TAG }}:main
           cache-to: type=inline
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            COMMIT=${{ github.sha }}

@@ -4,6 +4,7 @@ from datetime import datetime, date
 from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
 
+import version
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User, Workspace
 from src.schedule import Resolver, CalendarSync
@@ -116,6 +117,14 @@ class FlaskApp:
             if muted_length > 0:
                 result = f'<span class="text-muted">{result[:muted_length]}</span>{result[muted_length:]}'
             return f'{"-" if total_seconds < 0 else "&nbsp;"}{result}'
+
+        @self.app.context_processor
+        def inject_now():
+            return {"now": datetime.now()}
+
+        @self.app.context_processor
+        def inject_version():
+            return {"version": version}
 
     def run(self):
         self.app.run(debug=True, use_reloader=False, host="0.0.0.0")

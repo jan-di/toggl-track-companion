@@ -6,12 +6,13 @@ from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
 from src.updater import Updater
+import version
 
 
 def main():
     Log.init()
     logger = Log.get_logger("root")
-    logger.info("Starting updater..")
+    logger.info("Start updater @%s (%s)", version.VERSION, version.COMMIT)
 
     script_dir = path.dirname(path.realpath(__file__))
     config = Config(path.join(script_dir, ".env"))
@@ -21,7 +22,7 @@ def main():
     updater.run()
 
     Database.disconnect()
-    logger.info("Exiting updater..")
+    logger.info("Exit updater")
 
 
 if __name__ == "__main__":
