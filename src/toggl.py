@@ -41,12 +41,16 @@ class TogglApi:
         return self.__simple_request("GET", "/api/v9/me/all_workspaces")
 
     def get_workspace_clients(self, workspace_id: int) -> list[dict]:
-        return self.__simple_request(
-            "GET", f"/api/v9/workspaces/{workspace_id}/clients"
+        return (
+            self.__simple_request("GET", f"/api/v9/workspaces/{workspace_id}/clients")
+            or []
         )
 
     def get_workspace_tags(self, workspace_id: int) -> list[dict]:
-        return self.__simple_request("GET", f"/api/v9/workspaces/{workspace_id}/tags")
+        return (
+            self.__simple_request("GET", f"/api/v9/workspaces/{workspace_id}/tags")
+            or []
+        )
 
     def get_workspace_projects(self, workspace_id: int) -> list[dict]:
         return self.__paginated_request(
