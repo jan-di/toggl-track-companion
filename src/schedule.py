@@ -223,12 +223,15 @@ class Resolver:
         )
 
         time_entries = TimeEntry.objects(
-            Q(started_at__gte=start_date_with_offset)
-            & Q(started_at__lte=end_date_with_offset)
-            | Q(stopped_at__gte=start_date_with_offset)
-            & Q(stopped_at__lte=end_date_with_offset)
-            | Q(started_at__lte=start_date_with_offset)
-            & Q(stopped_at__gte=end_date_with_offset)
+            Q(user=user)
+            & (
+                Q(started_at__gte=start_date_with_offset)
+                & Q(started_at__lte=end_date_with_offset)
+                | Q(stopped_at__gte=start_date_with_offset)
+                & Q(stopped_at__lte=end_date_with_offset)
+                | Q(started_at__lte=start_date_with_offset)
+                & Q(stopped_at__gte=end_date_with_offset)
+            )
         )
         for time_entry in time_entries:
             Resolver.apply_time_entry(report.days, time_entry)
