@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "toggl-track-companion"
+version = "0.0.0"
+description = ""
+authors = ["Jan Dittrich <mail@jand.one>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-dotenv = "~=1.0"
+httpx = "~=0.24"
+python-dateutil = "~=2.8"
+flask = "~=2.3"
+cryptography = "~=41.0"
+icalendar = "~=5.0"
+mongoengine = "~=0.27"
+humanize = "~=4.7"
+gunicorn = "~=20.1"
+
+[tool.poetry.group.dev]
+[tool.poetry.group.dev.dependencies]
+pylint-mongoengine = "~=0.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
