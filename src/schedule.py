@@ -376,7 +376,7 @@ class CalendarSync:
     def filter_ical_components(self, ical: Calendar) -> list[tuple]:
         result = []
         for component in ical.walk():
-            if component.name == "VEVENT":
+            if component.name == "VEVENT" and "DESCRIPTION" in component:
                 match = self.ANNOTATION_PATTERN.search(component["DESCRIPTION"])
                 if match:
                     annotation_type = match.group(1)
