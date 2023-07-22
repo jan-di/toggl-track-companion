@@ -2,6 +2,8 @@
 
 component=$1
 
+source /venv/bin/activate
+
 start_web () {
   echo "Start Web"
 
