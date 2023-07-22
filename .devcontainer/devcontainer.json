@@ -48,7 +48,7 @@
 		27017 // mongodb
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "pip-sync requirements-dev.txt",
+	"postCreateCommand": "bash .devcontainer/post-create.sh",
 	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
 	"remoteUser": "vscode",
 	"features": {
