@@ -2,7 +2,10 @@
 
 {% block content %}
 
-
+{#
+TODO: When issue is fixed, naturaltime can use time zone aware datetimes again
+https://github.com/python-humanize/humanize/issues/122
+#}
 
 <h1>Profile</h1>
 
@@ -47,7 +50,7 @@
       {% if user.last_toggl_sync_at is not none %}
         <span data-bs-toggle="tooltip" data-bs-placement="top" 
           data-bs-title="{{ user.last_toggl_sync_at | as_timezone(user.timezone) | format_datetime() }}">
-        {{ humanize.naturaltime(user.last_toggl_sync_at,when=now) }}</span>
+        {{ humanize.naturaltime(user.last_toggl_sync_at,when=now.replace(tzinfo=None)) }}</span>
       {% else %}
         never
       {% endif %}
@@ -55,7 +58,7 @@
       <td>
         <span data-bs-toggle="tooltip" data-bs-placement="top" 
           data-bs-title="{{ [user.next_toggl_sync_at, now] | max | as_timezone(user.timezone) | format_datetime() }}">
-        {{ humanize.naturaltime([user.next_toggl_sync_at, now] | max,when=now) }}</span>
+        {{ humanize.naturaltime([user.next_toggl_sync_at, now] | max,when=now.replace(tzinfo=None)) }}</span>
       </td>
     </tr>
     <tr>
@@ -64,7 +67,7 @@
       {% if user.last_calendar_sync_at is not none %}
         <span data-bs-toggle="tooltip" data-bs-placement="top" 
           data-bs-title="{{ user.last_calendar_sync_at | as_timezone(user.timezone) | format_datetime() }}">
-        {{ humanize.naturaltime(user.last_calendar_sync_at,when=now) }}</span>
+        {{ humanize.naturaltime(user.last_calendar_sync_at,when=now.replace(tzinfo=None)) }}</span>
       {% else %}
         never
       {% endif %}
@@ -72,7 +75,7 @@
       <td>
         <span data-bs-toggle="tooltip" data-bs-placement="top" 
           data-bs-title="{{ [user.next_calendar_sync_at, now] | max | as_timezone(user.timezone) | format_datetime() }}">
-        {{ humanize.naturaltime([user.next_calendar_sync_at, now] | max,when=now) }}</span>
+        {{ humanize.naturaltime([user.next_calendar_sync_at, now] | max,when=now.replace(tzinfo=None)) }}</span>
       </td>
     </tr>
   </tbody>
