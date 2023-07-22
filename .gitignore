@@ -2,5 +2,8 @@
 __pycache__
 *.pyc
 
+.venv/
+.cache/
+
 # app
 .env
