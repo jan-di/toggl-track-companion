@@ -95,7 +95,38 @@ End: {{ report.end_date }}
         <td>{{ day.time_entry_slices | length }}</td>
         <td>{{ day.target_time() | format_time }}</td>
         <td>{{ day.actual_time() | format_time }}</td>
-        <td>{{ day.delta() | format_time }}</td>
+        <td>
+            {# TODO: Migrate to jinja macro #}
+            {% if day.target_time() > 0 %}
+                {% if day.delta_percentage() > 0 %}
+                {% set color = "secondary" %}
+                {% else %}
+                {% set color = "transparent" %}
+                {% endif %}
+                {% if day.events | length == 0 %}
+                    {% if day.delta_percentage() | abs > 40 %}
+                        {% set color = "danger" %}
+                    {% elif day.delta_percentage() | abs > 20 %}
+                        {% set color = "warning" %}
+                    {% endif %}
+                {% endif %}
+
+                <div class="progress d-inline-flex", style="width: 5rem">
+                {% if day.delta_percentage() > 0 %}
+                    <div class="progress-bar bg-secondary" role="progressbar" style="width: 50%"></div>
+                    <div class="progress-bar bg-{{ color }}" role="progressbar" style="width: {{ day.delta_percentage() | abs / 2 }}%"></div>
+                {% elif day.delta_percentage() < 0 %}
+                    <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ 50 - day.delta_percentage() | abs / 2 }}%"></div>
+                    <div class="progress-bar bg-{{ color }}" role="progressbar" style="width: {{ day.delta_percentage() | abs / 2 }}%"></div>
+                {% else %}
+                    <div class="progress-bar bg-secondary" role="progressbar" style="width: 50%"></div>
+                {% endif %}
+                </div>
+            {% else %}
+                <div class="progress d-inline-flex bg-light", style="width: 5rem"></div>
+            {% endif %}
+            {{ day.delta() | format_time }}
+        </td>
         <td>{% if day.events | length > 0 %}
             <ul>
                 {% for event in day.events %}

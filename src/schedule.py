@@ -36,6 +36,12 @@ class Day:
     def delta(self) -> int:
         return self.actual_time() - self.target_time()
 
+    def delta_percentage(self) -> float:
+        if self.target_time() > 0:
+            return self.delta() / self.target_time() * 100
+        else:
+            return None
+
     def __repr__(self):
         return (
             "<Day("
