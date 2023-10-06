@@ -104,6 +104,13 @@ class FlaskApp:
             return render_template("detailed_report.html.j2", user=user, report=report)
 
         @self.app.template_filter()
+        def format_number(number: int):
+            if number == 0:
+                return f'<span class="text-muted">{number}</span>'
+            else:
+                return f"<span>{number}</span>"
+
+        @self.app.template_filter()
         def format_percentage(number: float, precision: int = 2):
             if number is None:
                 return "---%"
@@ -123,6 +130,19 @@ class FlaskApp:
         @self.app.template_filter()
         def format_datetime(input_dt: datetime):
             return input_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+        @self.app.template_filter()
+        def format_weekday(weekday: int, length: int = None):
+            weekdays = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ]
+            return weekdays[weekday][:length]
 
         @self.app.template_filter()
         def as_timezone(input_dt: datetime, timezone_str: str):

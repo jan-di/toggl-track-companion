@@ -91,8 +91,8 @@ End: {{ report.end_date }}
     {% for day in report.days.values() %}
     <tr>
         <td>{{ day.date }}</td>
-        <td>{{ day.date.weekday() }}</td>
-        <td>{{ day.time_entry_slices | length }}</td>
+        <td>{{ day.date.weekday() | format_weekday(2) }}.</td>
+        <td>{{ day.time_entry_slices | length | format_number }}</td>
         <td>{{ day.target_time() | format_time }}</td>
         <td>{{ day.actual_time() | format_time }}</td>
         <td>
