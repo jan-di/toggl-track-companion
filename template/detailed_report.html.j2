@@ -130,7 +130,14 @@ End: {{ report.end_date }}
         <td>{% if day.events | length > 0 %}
             <ul>
                 {% for event in day.events %}
-                    <li>{{ event.name }} (rel={{ event.mod_relative}}; abs={{ event.mod_absolute}})</li>
+                    <li>{{ event.name }}
+                    {% if event.mod_relative != 0 %}
+                        <sup>rel {{ event.mod_relative}}</sup>
+                    {% endif %}
+                    {% if event.mod_absolute != 0 %}
+                        <sup>abs {{ event.mod_absolute}}</sup>
+                    {% endif %}
+                    </li>
                 {% endfor %}
             </ul>
         {% endif %}</td>
