@@ -1,3 +1,38 @@
+.nav {
+    --bs-nav-link-color: #8800ff;
+}
+
+:root {
+    --bs-link-color: #8800ff;
+    --bs-link-hover-color: #520099;
+}
+
+.btn-primary {
+    --bs-btn-bg: #8800ff;
+    --bs-btn-border-color: #7a00e6;
+    --bs-btn-hover-bg: #520099;
+    --bs-btn-hover-border-color: #440080;
+    --bs-btn-active-bg: #520099;
+    --bs-btn-active-border-color: #440080;
+}
+
+
+
+.btn-outline-primary {
+    --bs-btn-color: #8800ff;
+    --bs-btn-border-color: #8800ff;
+    --bs-btn-hover-bg: #8800ff;
+    --bs-btn-hover-border-color: #8800ff;
+    --bs-btn-active-bg: #8800ff;
+    --bs-btn-active-border-color: #8800ff;
+    --bs-btn-disabled-color: #8800ff;
+    --bs-btn-disabled-border-color: #8800ff;
+  }
+
+nav.navbar .btn-outline-primary {
+    background-color: #1f2327;
+}
+
 html {
     position: relative;
     min-height: 100%;
@@ -5,6 +40,10 @@ html {
 
 .logo {
     width: 2em;
+}
+
+a {
+    text-decoration: none;
 }
 
 body {
@@ -20,3 +59,10 @@ footer {
     line-height: 60px;
     background-color: #f5f5f5;
 }
+
+form.login {
+    width: 100%;
+    max-width: 530px;
+    padding: 15px;
+    margin: auto;
+  }

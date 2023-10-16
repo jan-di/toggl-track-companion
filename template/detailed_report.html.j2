@@ -11,71 +11,139 @@ Start: {{ report.start_date }}<br/>
 End: {{ report.end_date }}
 </p>
 
-<h2>Quarters</h2>
-<table class="table table-sm">
-    <tr>
-        <th>Year</th>
-        <th>Quarter</th>
-        <th>Days</th>
-        <th>Target Time</th>
-        <th>Actual Time</th>
-        <th>Delta</th>
-    </tr>
-    {% for quarter in report.quarters.values() %}
-    <tr>
-        <td>{{ quarter.year }}</td>
-        <td>{{ quarter.quarter }}</td>
-        <td>{{ quarter.days_with_actual_time() }}/{{ quarter.days_with_target_time() }} ({{ quarter.days | length }}/{{ quarter.max_days }})</td>
-        <td>{{ quarter.target_time() | format_time }}</td>
-        <td>{{ quarter.actual_time() | format_time }}</td>
-        <td>{{ quarter.delta() | format_time }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<h2>Summary</h2>
 
-<h2>Months</h2>
-<table class="table table-sm">
-    <tr>
-        <th>Year</th>
-        <th>Month</th>
-        <th>Days</th>
-        <th>Target Time</th>
-        <th>Actual Time</th>
-        <th>Delta</th>
-    </tr>
-    {% for month in report.months.values() %}
-    <tr>
-        <td>{{ month.year }}</td>
-        <td>{{ month.month }}</td>
-        <td>{{ month.days_with_actual_time() }}/{{ month.days_with_target_time() }} ({{ month.days | length }}/{{ month.max_days }})</td>
-        <td>{{ month.target_time() | format_time }}</td>
-        <td>{{ month.actual_time() | format_time }}</td>
-        <td>{{ month.delta() | format_time }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<ul class="nav nav-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="aggregate-all-tab" data-bs-toggle="tab" data-bs-target="#aggregate-all-content" type="button" role="tab" aria-controls="aggregate-all-content" aria-selected="true">All</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="aggregate-years-tab" data-bs-toggle="tab" data-bs-target="#aggregate-years-content" type="button" role="tab" aria-controls="aggregate-years-content" aria-selected="false">Years</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="aggregate-quarters-tab" data-bs-toggle="tab" data-bs-target="#aggregate-quarters-content" type="button" role="tab" aria-controls="aggregate-quarters-content" aria-selected="false">Quarters</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="aggregate-months-tab" data-bs-toggle="tab" data-bs-target="#aggregate-months-content" type="button" role="tab" aria-controls="aggregate-months-content" aria-selected="false">Months</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="aggregate-weeks-tab" data-bs-toggle="tab" data-bs-target="#aggregate-weeks-content" type="button" role="tab" aria-controls="aggregate-weeks-content" aria-selected="false">Weeks</button>
+    </li>
+</ul>
+<div class="tab-content">
 
-<h2>Weeks</h2>
-<table class="table table-sm">
-    <tr>
-        <th>Year</th>
-        <th>Week</th>
-        <th>Days</th>
-        <th>Target Time</th>
-        <th>Actual Time</th>
-        <th>Delta</th>
-    </tr>
-    {% for week in report.weeks.values() %}
-    <tr>
-        <td>{{ week.year }}</td>
-        <td>{{ week.week }}</td>
-        <td>{{ week.days_with_actual_time() }}/{{ week.days_with_target_time() }} ({{ week.days | length }}/{{ week.max_days }})</td>
-        <td>{{ week.target_time() | format_time }}</td>
-        <td>{{ week.actual_time() | format_time }}</td>
-        <td>{{ week.delta() | format_time }}</td>
-    </tr>
-    {% endfor %}
-</table>
+    {# All #}
+    <div class="tab-pane fade show active" id="aggregate-all-content" role="tabpanel" aria-labelledby="aggregate-all-content">
+        <table class="table table-sm">
+            <tr>
+                <th>Days</th>
+                <th>Target Time</th>
+                <th>Actual Time</th>
+                <th>Delta</th>
+            </tr>
+            <tr>
+                <td>{{ report.all.days_with_actual_time() }}/{{ report.all.days_with_target_time() }} ({{ report.all.days | length }}/{{ report.all.max_days }})</td>
+                <td>{{ report.all.target_time() | format_time }}</td>
+                <td>{{ report.all.actual_time() | format_time }}</td>
+                <td>{{ report.all.delta() | format_time }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {# Years #}
+    <div class="tab-pane fade" id="aggregate-years-content" role="tabpanel" aria-labelledby="aggregate-years-content">
+        <table class="table table-sm">
+            <tr>
+                <th>Year</th>
+                <th>Days</th>
+                <th>Target Time</th>
+                <th>Actual Time</th>
+                <th>Delta</th>
+            </tr>
+            {% for year in report.years.values() %}
+            <tr>
+                <td>{{ year.year }}</td>
+                <td>{{ year.days_with_actual_time() }}/{{ year.days_with_target_time() }} ({{ year.days | length }}/{{ year.max_days }})</td>
+                <td>{{ year.target_time() | format_time }}</td>
+                <td>{{ year.actual_time() | format_time }}</td>
+                <td>{{ year.delta() | format_time }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    {# Quarters #}
+    <div class="tab-pane fade" id="aggregate-quarters-content" role="tabpanel" aria-labelledby="aggregate-quarters-content">
+        <table class="table table-sm">
+            <tr>
+                <th>Year</th>
+                <th>Quarter</th>
+                <th>Days</th>
+                <th>Target Time</th>
+                <th>Actual Time</th>
+                <th>Delta</th>
+            </tr>
+            {% for quarter in report.quarters.values() %}
+            <tr>
+                <td>{{ quarter.year }}</td>
+                <td>{{ quarter.quarter }}</td>
+                <td>{{ quarter.days_with_actual_time() }}/{{ quarter.days_with_target_time() }} ({{ quarter.days | length }}/{{ quarter.max_days }})</td>
+                <td>{{ quarter.target_time() | format_time }}</td>
+                <td>{{ quarter.actual_time() | format_time }}</td>
+                <td>{{ quarter.delta() | format_time }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    {# Months #}
+    <div class="tab-pane fade" id="aggregate-months-content" role="tabpanel" aria-labelledby="aggregate-months-content">
+        <table class="table table-sm">
+            <tr>
+                <th>Year</th>
+                <th>Month</th>
+                <th>Days</th>
+                <th>Target Time</th>
+                <th>Actual Time</th>
+                <th>Delta</th>
+            </tr>
+            {% for month in report.months.values() %}
+            <tr>
+                <td>{{ month.year }}</td>
+                <td>{{ month.month }}</td>
+                <td>{{ month.days_with_actual_time() }}/{{ month.days_with_target_time() }} ({{ month.days | length }}/{{ month.max_days }})</td>
+                <td>{{ month.target_time() | format_time }}</td>
+                <td>{{ month.actual_time() | format_time }}</td>
+                <td>{{ month.delta() | format_time }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    {# Weeks #}
+    <div class="tab-pane fade" id="aggregate-weeks-content" role="tabpanel" aria-labelledby="aggregate-weeks-content">
+        <table class="table table-sm">
+            <tr>
+                <th>Year</th>
+                <th>Week</th>
+                <th>Days</th>
+                <th>Target Time</th>
+                <th>Actual Time</th>
+                <th>Delta</th>
+            </tr>
+            {% for week in report.weeks.values() %}
+            <tr>
+                <td>{{ week.year }}</td>
+                <td>{{ week.week }}</td>
+                <td>{{ week.days_with_actual_time() }}/{{ week.days_with_target_time() }} ({{ week.days | length }}/{{ week.max_days }})</td>
+                <td>{{ week.target_time() | format_time }}</td>
+                <td>{{ week.actual_time() | format_time }}</td>
+                <td>{{ week.delta() | format_time }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
 
 <h2>Days</h2>
 <table class="table table-sm">
@@ -144,7 +212,5 @@ End: {{ report.end_date }}
     </tr>
     {% endfor %}
 </table>
-
-<p>Running Delta: {{ report.running_delta() | format_time }}</p>
 
 {% endblock content %}

@@ -8,9 +8,15 @@
 </div>
 {% endif %}
 
-<p>Login with toggl track credentials:</p>
+<form class="login" method="POST">
+  
+  <h1 class="d-flex justify-content-between align-items-end mb-4">
+    <span>Login</span>
+    <img class="me-2 logo " src="{{ url_for('static', filename='img/logo.png') }}" />
+  </h1>
 
-<form method="POST">
+  <p>Login with your <a href="https://toggl.com/track/">toggl track</a> credentials:</p>
+
   <div class="form-outline mb-4">
     <input name="username" type="email" id="form2Example1" class="form-control" />
     <label class="form-label" for="form2Example1">Email address</label>
@@ -21,7 +27,7 @@
     <label class="form-label" for="form2Example2">Password</label>
   </div>
 
-  <button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+  <button type="submit" class="btn btn-primary btn-block mb-4 w-100">Sign in</button>
 </form>
 
 {% endblock content %}

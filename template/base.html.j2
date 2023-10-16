@@ -15,7 +15,7 @@
         <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
             <div class="container-fluid">
                 <a href="{{ url_for('index') }}"><img class="me-2 logo d-block" src="{{ url_for('static', filename='img/logo.png') }}" /></a>
-                <a class="navbar-brand" href="{{ url_for('index') }}">Toggl Track Companion</a>
+                <a class="navbar-brand" href="{{ url_for('index') }}">toggl track companion</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
                 </button>
@@ -41,7 +41,7 @@
                     </li>
                 </ul>
                 <form class="d-flex" method="post" action="{{ url_for('logout') }}">
-                    <button type="submit" class="btn btn-outline-success">Logout</button>
+                    <button type="submit" class="btn btn-outline-primary">Logout</button>
                 </form>
                 {% endif %}
                 </div>

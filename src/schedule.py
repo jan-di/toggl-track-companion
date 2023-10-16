@@ -168,6 +168,43 @@ class Quarter(DayAggregate):
         )
 
 
+class Year(DayAggregate):
+    def __init__(self, year: int):
+        start = date(year, 1, 1)
+        end = date(year, 12, 31)
+        super().__init__(start, end)
+        self.year = year
+
+    @classmethod
+    def get_key_from_date(cls, day_date: date) -> int:
+        return day_date.year
+
+    def get_key(self) -> tuple:
+        return __class__.get_key_from_date(self.start)
+
+    def __repr__(self):
+        return (
+            "<Year("
+            f"key={self.get_key()};"
+            f"target_time={self.target_time()};"
+            f"actual_time={self.actual_time()})>"
+        )
+
+
+class All(DayAggregate):
+    def __init__(self, start: date, end: date):
+        start = start
+        end = end
+        super().__init__(start, end)
+
+    def __repr__(self):
+        return (
+            "<All("
+            f"target_time={self.target_time()};"
+            f"actual_time={self.actual_time()})>"
+        )
+
+
 class Report:
     def __init__(
         self,
@@ -185,6 +222,8 @@ class Report:
         self.weeks = {}
         self.months = {}
         self.quarters = {}
+        self.years = {}
+        self.all = All(start_date, end_date)
 
     def running_delta(self):
         running_delta = 0
@@ -258,6 +297,13 @@ class Resolver:
             if quarter_key not in report.quarters:
                 report.quarters[quarter_key] = Quarter(*quarter_key)
             report.quarters[quarter_key].days.add(day)
+
+            year_key = Year.get_key_from_date(day.date)
+            if year_key not in report.years:
+                report.years[year_key] = Year(year_key)
+            report.years[year_key].days.add(day)
+
+            report.all.days.add(day)
 
         return report
 
