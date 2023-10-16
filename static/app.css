@@ -16,8 +16,6 @@
     --bs-btn-active-border-color: #440080;
 }
 
-
-
 .btn-outline-primary {
     --bs-btn-color: #8800ff;
     --bs-btn-border-color: #8800ff;
@@ -27,15 +25,15 @@
     --bs-btn-active-border-color: #8800ff;
     --bs-btn-disabled-color: #8800ff;
     --bs-btn-disabled-border-color: #8800ff;
-  }
-
-nav.navbar .btn-outline-primary {
-    background-color: #1f2327;
 }
 
 html {
     position: relative;
     min-height: 100%;
+}
+
+nav.navbar .btn-outline-primary {
+    --bs-btn-bg: #1c1f23;
 }
 
 .logo {
