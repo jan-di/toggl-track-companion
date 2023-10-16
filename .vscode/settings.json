@@ -1,5 +1,5 @@
 {
-    "python.linting.pylintArgs": [
+    "pylint.args": [
         "--load-plugins=pylint_mongoengine"
     ],
     "[python]": {
