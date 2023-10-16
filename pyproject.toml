@@ -6,7 +6,7 @@ authors = ["Jan Dittrich <mail@jand.one>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 python-dotenv = "~=1.0"
 httpx = "~=0.25"
 python-dateutil = "~=2.8"
