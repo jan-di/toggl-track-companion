@@ -1,5 +1,14 @@
+@font-face {
+    font-family: 'Kreon Light';
+    src: url(font/kreon-light.woff2);
+}
+
 .nav {
     --bs-nav-link-color: #8800ff;
+}
+
+nav .navbar-brand {
+    font-family: 'Kreon Light';
 }
 
 :root {
