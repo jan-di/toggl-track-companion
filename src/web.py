@@ -5,6 +5,7 @@ from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
 import humanize
 import pytz
+import json
 
 import version
 from src.toggl import TogglApi, TogglUpdater
@@ -55,8 +56,13 @@ class FlaskApp:
 
         @self.app.route("/webhook", methods=["POST"])
         def webhook():
-            print(request.form)
-            return 200
+            event = request.json
+
+            response = {}
+            if "validation_code" in event:
+                response["validation_code"] = event["validation_code"]
+
+            return response, 200
 
         @self.app.route("/logout", methods=["POST"])
         @self.__require_auth
