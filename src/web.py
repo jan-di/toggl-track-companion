@@ -13,13 +13,13 @@ from src.schedule import Resolver, CalendarSync
 
 
 class FlaskApp:
-    def __init__(self, server_name: str, session_secret: str, root_dir: str):
+    def __init__(self, session_secret: str, root_dir: str):
         self.app = Flask(
             __name__,
             static_folder=path.join(root_dir, "static"),
             template_folder=path.join(root_dir, "template"),
         )
-        self.app.config.update(SERVER_NAME=server_name, SECRET_KEY=session_secret)
+        self.app.config.update(SECRET_KEY=session_secret)
 
         @self.app.route("/")
         @self.__require_auth
@@ -52,6 +52,11 @@ class FlaskApp:
                     error_msg = "Login failed."
 
             return render_template("login.html.j2", error_msg=error_msg)
+
+        @self.app.route("/webhook", methods=["POST"])
+        def webhook():
+            print(request.form)
+            return 200
 
         @self.app.route("/logout", methods=["POST"])
         @self.__require_auth
