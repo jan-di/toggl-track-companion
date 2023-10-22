@@ -269,6 +269,7 @@ class Resolver:
 
         time_entries = TimeEntry.objects(
             Q(user=user)
+            & Q(workspace=workspace)
             & (
                 Q(started_at__gte=start_date_with_offset)
                 & Q(started_at__lte=end_date_with_offset)
