@@ -19,7 +19,7 @@ logger.setLevel(config.log_level)
 def get_app() -> Flask:
     Database.connect(config.database_uri)
 
-    app = FlaskApp(config.flask_server_name, config.flask_session_secret, script_dir)
+    app = FlaskApp(config.flask_session_secret, script_dir)
 
     return app.app
 

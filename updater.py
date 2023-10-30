@@ -2,6 +2,7 @@
 
 from os import path
 
+from src.web import FlaskApp
 from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
@@ -19,7 +20,17 @@ def main():
     logger.setLevel(config.log_level)
     Database.connect(config.database_uri)
 
-    updater = Updater(config.sync_interval_calendar, config.sync_interval_toggl)
+    web_app = FlaskApp(
+        config.flask_session_secret,
+        script_dir,
+        config.server_url,
+    )
+    updater = Updater(
+        config.sync_interval_calendar,
+        config.sync_interval_toggl,
+        web_app,
+        config.server_id,
+    )
     updater.run()
 
     Database.disconnect()

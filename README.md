@@ -95,7 +95,6 @@ db.grantRolesToUser("app", [{ role: "clusterMonitor", db: "admin" }]);
 
 ```shell
 DATABASE_URI = 'mongodb://app:<secure-password-for-app-user>@mongodb:27017/app'
-FLASK_SERVER_NAME = "<the-url-to-reach-webserver>"
 FLASK_SESSION_SECRET = "<random-generated-session-secret>"
 SYNC_INTERVAL_CALENDAR = 900
 SYNC_INTERVAL_TOGGL = 3600
@@ -105,8 +104,9 @@ SYNC_INTERVAL_TOGGL = 3600
 
 | Variable                 | Default  | Description                                                                                          |
 | ------------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `SERVER_ID`              | required | Unique ID of this ttc instance                                                                       |
+| `SERVER_URL`             | required | External url of your instance (with schema and path)                                                 |
 | `DATABASE_URI`           | required | URL to Mongodb database.                                                                             |
-| `FLASK_SERVER_NAME`      | required | Server Host/Port that clients use to connect.                                                        |
 | `FLASK_SESSION_SECRET`   | required | Random string that is used to sign session keys.                                                     |
 | `SYNC_INTERVAL_CALENDAR` | `3600`   | Sync interval for schedule calendars in seconds                                                      |
 | `SYNC_INTERVAL_TOGGL`    | `86400`  | Sync interval for toggl data in seconds                                                              |

@@ -56,6 +56,7 @@ class Workspace(BaseDocument):
     fetched_at = DateTimeField(required=True)
     name = StringField(required=True)
     logo_url = StringField()
+    webhook_token = StringField()
 
     meta = {"collection": COLLECTION_NAME}
 

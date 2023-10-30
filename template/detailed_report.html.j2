@@ -60,7 +60,7 @@ End: {{ report.end_date }}
                 <th>Actual Time</th>
                 <th>Delta</th>
             </tr>
-            {% for year in report.years.values() %}
+            {% for year in report.years.values() | reverse %}
             <tr>
                 <td>{{ year.year }}</td>
                 <td>{{ year.days_with_actual_time() }}/{{ year.days_with_target_time() }} ({{ year.days | length }}/{{ year.max_days }})</td>
@@ -83,7 +83,7 @@ End: {{ report.end_date }}
                 <th>Actual Time</th>
                 <th>Delta</th>
             </tr>
-            {% for quarter in report.quarters.values() %}
+            {% for quarter in report.quarters.values() | reverse %}
             <tr>
                 <td>{{ quarter.year }}</td>
                 <td>{{ quarter.quarter }}</td>
@@ -107,7 +107,7 @@ End: {{ report.end_date }}
                 <th>Actual Time</th>
                 <th>Delta</th>
             </tr>
-            {% for month in report.months.values() %}
+            {% for month in report.months.values() | reverse %}
             <tr>
                 <td>{{ month.year }}</td>
                 <td>{{ month.month }}</td>
@@ -131,7 +131,7 @@ End: {{ report.end_date }}
                 <th>Actual Time</th>
                 <th>Delta</th>
             </tr>
-            {% for week in report.weeks.values() %}
+            {% for week in report.weeks.values() | reverse %}
             <tr>
                 <td>{{ week.year }}</td>
                 <td>{{ week.week }}</td>
@@ -156,7 +156,7 @@ End: {{ report.end_date }}
         <th>Delta</th>
         <th>Events</th>
     </tr>
-    {% for day in report.days.values() %}
+    {% for day in report.days.values() | reverse %}
     <tr>
         <td>{{ day.date }}</td>
         <td>{{ day.date.weekday() | format_weekday(2) }}.</td>

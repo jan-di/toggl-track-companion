@@ -87,7 +87,7 @@ https://github.com/python-humanize/humanize/issues/122
 {% for user_workspace in user.workspaces %}
   <h3><img style="width: 1em;" src="{{ user_workspace.workspace.logo_url }}"/> {{ user_workspace.workspace.organization.name }} » {{ user_workspace.workspace.name }}</h3>
 
-  <label class="form-label" for="start">Start of aggration:</label>
+  <label class="form-label" for="start">Start of aggregation:</label>
   <input class="form-control" type="date" 
       id="{{ user_workspace.workspace.id }}-start-of-aggregation" 
       name="{{ user_workspace.workspace.id }}-start-of-aggregation" 

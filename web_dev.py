@@ -19,7 +19,7 @@ def main() -> None:
     logger.setLevel(config.log_level)
     Database.connect(config.database_uri)
 
-    app = FlaskApp(config.flask_server_name, config.flask_session_secret, script_dir)
+    app = FlaskApp(config.flask_session_secret, script_dir)
     app.run_debug()
 
     Database.disconnect()
