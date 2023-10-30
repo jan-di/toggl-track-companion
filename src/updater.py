@@ -2,6 +2,8 @@ from threading import Event as ThreadingEvent
 import logging
 import signal
 from datetime import date, datetime, timezone
+from src.web import FlaskApp
+
 
 from src.db.schema import (
     User,
@@ -14,16 +16,24 @@ from src.db.schema import (
     Schedule,
     Event,
 )
-from src.toggl import TogglApi, TogglUpdater
+from src.toggl import TogglApi, TogglUpdater, WorkspaceSubscription, EventFilter
 from src.schedule import CalendarSync
 
 
 class Updater:
-    def __init__(self, sync_interval_calendar: int, sync_interval_toggl: int) -> None:
+    def __init__(
+        self,
+        sync_interval_calendar: int,
+        sync_interval_toggl: int,
+        web_app: FlaskApp,
+        server_id: str,
+    ) -> None:
         self.exit_event = ThreadingEvent()
         self.sync_interval_calendar = sync_interval_calendar
         self.sync_interval_toggl = sync_interval_toggl
         self.toggl_updater = TogglUpdater()
+        self.flask_app = web_app
+        self.server_id = server_id
         exit_signals = {1: "SIGHUP", 2: "SIGINT", 15: "SIGTERM"}
 
         def exit_loop(signal_number, _frame):
@@ -96,36 +106,39 @@ class Updater:
                 workspaces_created_updated += len(workspaces)
 
                 for workspace in workspaces:
-                    # check webhooks
+                    # get existing webhooks
                     subscriptions = toggl_api.get_workspace_subscriptions(
                         workspace.workspace_id
                     )
-                    # print(subscription_dataset)
-                    for subscription in subscriptions:
-                        print(subscription)
 
-                    # toggl_api.create_workspace_subscription(workspace.workspace_id, {
-                    #     "description": "lol!",
-                    #     "event_filters": [
-                    #         {
-                    #             "entity": "client",
-                    #             "action": "*"
-                    #         },
-                    #         {
-                    #             "entity": "project",
-                    #             "action": "*"
-                    #         },
-                    #         {
-                    #             "entity": "tag",
-                    #             "action": "*"
-                    #         },
-                    #         {
-                    #             "entity": "time_entry",
-                    #             "action": "*"
-                    #         }
-                    #     ],
-                    #     "url_callback": "",
-                    # })
+                    # prepare data for new webhook
+                    webhook_description = f"ttc/{self.server_id}"
+                    webhook_url = self.flask_app.app.url_for("webhook", workspace_id=workspace.workspace_id)
+                    new_webhook = WorkspaceSubscription(
+                        description=webhook_description,
+                        enabled=True,
+                        event_filters=[
+                            EventFilter(entity="client", action="*"),
+                            EventFilter(entity="project", action="*"),
+                            EventFilter(entity="tag", action="*"),
+                            EventFilter(entity="time_entry", action="*"),
+                        ],
+                        secret=workspace.webhook_token,
+                        url_callback=webhook_url,
+                    )
+
+                    # check if webhook already exists
+                    existing_webhook = None
+                    for subscription in subscriptions:
+                        if subscription.description == webhook_description:
+                            existing_webhook = subscription
+                            break
+
+                    # create webhook if needed
+                    if existing_webhook is None:
+                        toggl_api.create_workspace_subscription(
+                            workspace.workspace_id, new_webhook
+                        )
 
                     # create/update clients
                     client_dataset = toggl_api.get_workspace_clients(

@@ -56,6 +56,7 @@ class Workspace(BaseDocument):
     fetched_at = DateTimeField(required=True)
     name = StringField(required=True)
     logo_url = StringField()
+    webhook_token = StringField()
 
     meta = {"collection": COLLECTION_NAME}
 
@@ -64,7 +65,6 @@ class UserWorkspace(EmbeddedDocument):
     workspace = ReferenceField(Workspace, db_field="workspace_id", required=True)
     schedule_calendar_url = StringField()
     start_of_aggregation = DateField(required=True)
-    webhook_token = StringField()
 
 
 class User(BaseDocument):

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, date, timezone
 import time
+import secrets
 
 import httpx
 from mongoengine import DoesNotExist
@@ -14,7 +15,7 @@ from src.db.schema import (
     Project,
 )
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 
 
 class ApiResource:
@@ -24,23 +25,60 @@ class ApiResource:
         for field in fields(obj):
             if field.name in data:
                 if hasattr(field.type, "__origin__") and field.type.__origin__ is list:
-                    value = list(
-                        map(
-                            lambda o: cls.__resolve_value(field.type.__args__[0], o),
-                            data[field.name],
-                        )
+                    setattr(
+                        obj,
+                        field.name,
+                        list(
+                            map(
+                                lambda o: cls.__from_dict_value(
+                                    field.type.__args__[0], o
+                                ),
+                                data[field.name],
+                            )
+                        ),
                     )
                 else:
-                    value = cls.__resolve_value(field.type, data[field.name])
-                setattr(obj, field.name, value)
+                    setattr(
+                        obj,
+                        field.name,
+                        cls.__from_dict_value(field.type, data[field.name]),
+                    )
         return obj
 
     @classmethod
-    def __resolve_value(cls, field_type: type, data_value: object) -> object:
+    def __from_dict_value(cls, field_type: type, data_value: object) -> object:
         if field_type in [int, float, bool, str]:
             return data_value
         elif issubclass(field_type, ApiResource):
             return field_type.from_dict(data_value)
+        else:
+            raise ValueError("unknown type")
+
+    def to_dict(self) -> dict:
+        result = {}
+        for field in fields(self):
+            if (
+                hasattr(field.type, "__origin__")
+                and field.type.__origin__ is list
+                and len(getattr(self, field.name)) > 0
+            ):
+                result[field.name] = list(
+                    map(
+                        lambda o: self.__to_dict_value(field.type.__args__[0], o),
+                        getattr(self, field.name),
+                    )
+                )
+            elif getattr(self, field.name) != None:
+                result[field.name] = self.__to_dict_value(
+                    field.type, getattr(self, field.name)
+                )
+        return result
+
+    def __to_dict_value(self, field_type: type, attr_value: object) -> object:
+        if field_type in [int, float, bool, str]:
+            return attr_value
+        elif issubclass(field_type, ApiResource):
+            return field_type.to_dict(attr_value)
         else:
             raise ValueError("unknown type")
 
@@ -68,7 +106,7 @@ class WorkspaceSubscription(ApiResource):
     deleted_at: str = None
     description: str = None
     enabled: bool = None
-    event_filters: list[EventFilter] = None
+    event_filters: list[EventFilter] = field(default_factory=list[EventFilter])
     has_pending_events: bool = None
     secret: str = None
     subscription_id: int = None
@@ -122,20 +160,26 @@ class TogglApi:
         )
 
     def get_workspace_subscriptions(
-        self, workspace_id: int
+        self,
+        workspace_id: int,
     ) -> list[WorkspaceSubscription]:
         response_body = self.__simple_request(
-            "GET", f"/webhooks/api/v1/subscriptions/{workspace_id}"
+            "GET",
+            f"/webhooks/api/v1/subscriptions/{workspace_id}",
         )
 
         return map(lambda s: WorkspaceSubscription.from_dict(s), response_body)
 
-    # def create_workspace_subscription(self, workspace_id: int, json_body: dict):
-    #     return self.__simple_request(
-    #         "POST",
-    #         f"/webhooks/api/v1/subscriptions/{workspace_id}",
-    #         json_body=json_body,
-    #     )
+    def create_workspace_subscription(
+        self,
+        workspace_id: int,
+        subscription: WorkspaceSubscription,
+    ) -> None:
+        return self.__simple_request(
+            "POST",
+            f"/webhooks/api/v1/subscriptions/{workspace_id}",
+            json_body=subscription.to_dict(),
+        )
 
     def get_workspace_time_entries(
         self, workspace_id: int, start_date: date, end_date: date
@@ -307,6 +351,8 @@ class TogglUpdater:
         workspace.fetched_at = datetime.now(timezone.utc)
         workspace.name = workspace_data["name"]
         workspace.logo_url = workspace_data["logo_url"]
+        if workspace.webhook_token is None or len(workspace.webhook_token) == 0:
+            workspace.webhook_token = secrets.token_hex(32)
 
         return workspace.save()
 

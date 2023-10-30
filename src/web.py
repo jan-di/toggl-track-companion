@@ -6,21 +6,32 @@ from httpx import HTTPStatusError
 import humanize
 import pytz
 import json
+from urllib.parse import urlparse
+import hmac
 
 import version
 from src.toggl import TogglApi, TogglUpdater
 from src.db.schema import User, Workspace
 from src.schedule import Resolver, CalendarSync
+from src.util.log import Log
 
 
 class FlaskApp:
-    def __init__(self, session_secret: str, root_dir: str):
+    def __init__(self, session_secret: str, root_dir: str, server_url: str = None):
         self.app = Flask(
             __name__,
             static_folder=path.join(root_dir, "static"),
             template_folder=path.join(root_dir, "template"),
         )
         self.app.config.update(SECRET_KEY=session_secret)
+        if server_url is not None:
+            url_parts = urlparse(server_url)
+            self.app.config.update(
+                SERVER_NAME=url_parts.netloc,
+                APPLICATION_ROOT=url_parts.path,
+                PREFERRED_URL_SCHEME=url_parts.scheme,
+            )
+        self.webhook_logger = Log.get_logger("webhook")
 
         @self.app.route("/")
         @self.__require_auth
@@ -54,13 +65,53 @@ class FlaskApp:
 
             return render_template("login.html.j2", error_msg=error_msg)
 
-        @self.app.route("/webhook", methods=["POST"])
-        def webhook():
-            event = request.json
+        @self.app.route("/webhook/<workspace_id>", methods=["POST"])
+        def webhook(workspace_id):
+            workspace = Workspace.objects.get(workspace_id=workspace_id)
 
+            # Validate content type
+            if not request.is_json:
+                return "invalid content type", 407
+
+            # Validate hmac signature
+            secret = workspace.webhook_token
+            message = request.data
+            signature = request.headers["x-webhook-signature-256"]
+            digest = hmac.new(secret.encode("utf-8"), message, "sha256").hexdigest()
+            if not hmac.compare_digest(signature, f"sha256={digest}"):
+                return "invalid signature", 401
+
+            # Validate url_callback
+            request_url = urlparse(request.json["url_callback"])
+            generated_url = urlparse(
+                url_for("webhook", _external=True, workspace_id=workspace_id)
+            )
+            if (
+                request_url.netloc != generated_url.netloc
+                or request_url.path != generated_url.path
+            ):
+                return "invalid callback url", 400
+
+            # Answer validation requests from toggl
+            event = request.json
             response = {}
             if "validation_code" in event:
                 response["validation_code"] = event["validation_code"]
+
+            # Process webhook payload
+            if event["payload"] == "ping":
+                self.webhook_logger.info(
+                    "%s ping",
+                    event["metadata"]["event_user_id"],
+                )
+            else:
+                self.webhook_logger.info(
+                    "%s %s %s %s",
+                    event["metadata"]["event_user_id"],
+                    event["metadata"]["action"],
+                    event["metadata"]["model"],
+                    event["metadata"]["path"],
+                )
 
             return response, 200
 
