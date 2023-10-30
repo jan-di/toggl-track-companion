@@ -14,6 +14,70 @@ from src.db.schema import (
     Project,
 )
 
+from dataclasses import dataclass, fields
+
+
+class ApiResource:
+    @classmethod
+    def from_dict(cls, data: dict) -> "WorkspaceSubscription":
+        obj = cls()
+        for field in fields(obj):
+            if field.name in data:
+                if hasattr(field.type, "__origin__") and field.type.__origin__ is list:
+                    value = list(
+                        map(
+                            lambda o: cls.__resolve_value(field.type.__args__[0], o),
+                            data[field.name],
+                        )
+                    )
+                else:
+                    value = cls.__resolve_value(field.type, data[field.name])
+                setattr(obj, field.name, value)
+        return obj
+
+    @classmethod
+    def __resolve_value(cls, field_type: type, data_value: object) -> object:
+        if field_type in [int, float, bool, str]:
+            return data_value
+        elif issubclass(field_type, ApiResource):
+            return field_type.from_dict(data_value)
+        else:
+            raise ValueError("unknown type")
+
+
+@dataclass
+class EventFilter(ApiResource):
+    """
+    Represets a event filter resource of the webhook api.
+    https://developers.track.toggl.com/docs/webhooks_start/event_filters
+    https://developers.track.toggl.com/docs/webhooks/event_filters
+    """
+
+    action: str = None
+    entity: str = None
+
+
+@dataclass
+class WorkspaceSubscription(ApiResource):
+    """
+    Represents a workspace subscription of the webhook api.
+    https://developers.track.toggl.com/docs/webhooks/subscriptions
+    """
+
+    created_at: str = None
+    deleted_at: str = None
+    description: str = None
+    enabled: bool = None
+    event_filters: list[EventFilter] = None
+    has_pending_events: bool = None
+    secret: str = None
+    subscription_id: int = None
+    updated_at: str = None
+    url_callback: str = None
+    user_id: int = None
+    validated_at: str = None
+    workspace_id: int = None
+
 
 class TogglApi:
     MIN_YEAR = 2006
@@ -57,6 +121,22 @@ class TogglApi:
             "GET", f"/api/v9/workspaces/{workspace_id}/projects"
         )
 
+    def get_workspace_subscriptions(
+        self, workspace_id: int
+    ) -> list[WorkspaceSubscription]:
+        response_body = self.__simple_request(
+            "GET", f"/webhooks/api/v1/subscriptions/{workspace_id}"
+        )
+
+        return map(lambda s: WorkspaceSubscription.from_dict(s), response_body)
+
+    # def create_workspace_subscription(self, workspace_id: int, json_body: dict):
+    #     return self.__simple_request(
+    #         "POST",
+    #         f"/webhooks/api/v1/subscriptions/{workspace_id}",
+    #         json_body=json_body,
+    #     )
+
     def get_workspace_time_entries(
         self, workspace_id: int, start_date: date, end_date: date
     ) -> list:
@@ -93,8 +173,10 @@ class TogglApi:
 
         return response
 
-    def __simple_request(self, method: str, endpoint: str, params: dict = None):
-        response = self.__request(method, endpoint, params=params)
+    def __simple_request(
+        self, method: str, endpoint: str, params: dict = None, json_body: dict = None
+    ):
+        response = self.__request(method, endpoint, params=params, json_body=json_body)
 
         return response.json()
 

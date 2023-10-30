@@ -64,6 +64,7 @@ class UserWorkspace(EmbeddedDocument):
     workspace = ReferenceField(Workspace, db_field="workspace_id", required=True)
     schedule_calendar_url = StringField()
     start_of_aggregation = DateField(required=True)
+    webhook_token = StringField()
 
 
 class User(BaseDocument):

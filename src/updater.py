@@ -96,6 +96,37 @@ class Updater:
                 workspaces_created_updated += len(workspaces)
 
                 for workspace in workspaces:
+                    # check webhooks
+                    subscriptions = toggl_api.get_workspace_subscriptions(
+                        workspace.workspace_id
+                    )
+                    # print(subscription_dataset)
+                    for subscription in subscriptions:
+                        print(subscription)
+
+                    # toggl_api.create_workspace_subscription(workspace.workspace_id, {
+                    #     "description": "lol!",
+                    #     "event_filters": [
+                    #         {
+                    #             "entity": "client",
+                    #             "action": "*"
+                    #         },
+                    #         {
+                    #             "entity": "project",
+                    #             "action": "*"
+                    #         },
+                    #         {
+                    #             "entity": "tag",
+                    #             "action": "*"
+                    #         },
+                    #         {
+                    #             "entity": "time_entry",
+                    #             "action": "*"
+                    #         }
+                    #     ],
+                    #     "url_callback": "",
+                    # })
+
                     # create/update clients
                     client_dataset = toggl_api.get_workspace_clients(
                         workspace.workspace_id
