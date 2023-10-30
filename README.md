@@ -104,6 +104,8 @@ SYNC_INTERVAL_TOGGL = 3600
 
 | Variable                 | Default  | Description                                                                                          |
 | ------------------------ | -------- | ---------------------------------------------------------------------------------------------------- |
+| `SERVER_ID`              | required | Unique ID of this ttc instance                                                                       |
+| `SERVER_URL`             | required | External url of your instance (with schema and path)                                                 |
 | `DATABASE_URI`           | required | URL to Mongodb database.                                                                             |
 | `FLASK_SESSION_SECRET`   | required | Random string that is used to sign session keys.                                                     |
 | `SYNC_INTERVAL_CALENDAR` | `3600`   | Sync interval for schedule calendars in seconds                                                      |
