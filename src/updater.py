@@ -105,15 +105,19 @@ class Updater:
                 )
                 workspaces_created_updated += len(workspaces)
 
-                for workspace in workspaces:
+                for user_workspace in user.workspaces:
                     # get existing webhooks
                     subscriptions = toggl_api.get_workspace_subscriptions(
-                        workspace.workspace_id
+                        user_workspace.workspace.workspace_id
                     )
 
                     # prepare data for new webhook
-                    webhook_description = f"ttc/{self.server_id}"
-                    webhook_url = self.flask_app.app.url_for("webhook", workspace_id=workspace.workspace_id)
+                    webhook_description = f"ttc/{self.server_id}/{user.user_id}"
+                    webhook_url = self.flask_app.app.url_for(
+                        "webhook",
+                        workspace_id=user_workspace.workspace.workspace_id,
+                        user_id=user.user_id,
+                    )
                     new_webhook = WorkspaceSubscription(
                         description=webhook_description,
                         enabled=True,
@@ -123,7 +127,7 @@ class Updater:
                             EventFilter(entity="tag", action="*"),
                             EventFilter(entity="time_entry", action="*"),
                         ],
-                        secret=workspace.webhook_token,
+                        secret=user_workspace.subscription_token,
                         url_callback=webhook_url,
                     )
 
@@ -137,9 +141,10 @@ class Updater:
                     # create webhook if needed
                     if existing_webhook is None:
                         toggl_api.create_workspace_subscription(
-                            workspace.workspace_id, new_webhook
+                            user_workspace.workspace.workspace_id, new_webhook
                         )
 
+                for workspace in workspaces:
                     # create/update clients
                     client_dataset = toggl_api.get_workspace_clients(
                         workspace.workspace_id

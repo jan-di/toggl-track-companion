@@ -311,6 +311,13 @@ class TogglUpdater:
             )
             indexed_workspaces[key].start_of_aggregation = date.today()
 
+        for workspace in indexed_workspaces.values():
+            if (
+                workspace.subscription_token is None
+                or len(workspace.subscription_token) == 0
+            ):
+                workspace.subscription_token = secrets.token_hex(32)
+
         user.workspaces = list(indexed_workspaces.values())
 
         return user.save()
@@ -351,8 +358,6 @@ class TogglUpdater:
         workspace.fetched_at = datetime.now(timezone.utc)
         workspace.name = workspace_data["name"]
         workspace.logo_url = workspace_data["logo_url"]
-        if workspace.webhook_token is None or len(workspace.webhook_token) == 0:
-            workspace.webhook_token = secrets.token_hex(32)
 
         return workspace.save()
 

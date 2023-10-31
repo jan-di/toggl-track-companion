@@ -8,6 +8,7 @@ import pytz
 import json
 from urllib.parse import urlparse
 import hmac
+from mongoengine import DoesNotExist
 
 import version
 from src.toggl import TogglApi, TogglUpdater
@@ -65,16 +66,29 @@ class FlaskApp:
 
             return render_template("login.html.j2", error_msg=error_msg)
 
-        @self.app.route("/webhook/<workspace_id>", methods=["POST"])
-        def webhook(workspace_id):
-            workspace = Workspace.objects.get(workspace_id=workspace_id)
+        @self.app.route("/webhook/<int:workspace_id>/<int:user_id>", methods=["POST"])
+        def webhook(workspace_id: int, user_id: int):
+            # Check if user could be found
+            try:
+                user = User.objects.get(user_id=user_id)
+            except DoesNotExist:
+                return "not found", 404
+
+            # Check if user workspace could be found
+            user_workspace = None
+            for u_workspace in user.workspaces:
+                if u_workspace.workspace.workspace_id == workspace_id:
+                    user_workspace = u_workspace
+                    break
+            if user_workspace is None:
+                return "not found", 404
 
             # Validate content type
             if not request.is_json:
-                return "invalid content type", 407
+                return "invalid content type", 406
 
             # Validate hmac signature
-            secret = workspace.webhook_token
+            secret = user_workspace.subscription_token
             message = request.data
             signature = request.headers["x-webhook-signature-256"]
             digest = hmac.new(secret.encode("utf-8"), message, "sha256").hexdigest()
@@ -84,7 +98,12 @@ class FlaskApp:
             # Validate url_callback
             request_url = urlparse(request.json["url_callback"])
             generated_url = urlparse(
-                url_for("webhook", _external=True, workspace_id=workspace_id)
+                url_for(
+                    "webhook",
+                    _external=True,
+                    workspace_id=workspace_id,
+                    user_id=user.user_id,
+                )
             )
             if (
                 request_url.netloc != generated_url.netloc
@@ -98,20 +117,30 @@ class FlaskApp:
             if "validation_code" in event:
                 response["validation_code"] = event["validation_code"]
 
-            # Process webhook payload
-            if event["payload"] == "ping":
-                self.webhook_logger.info(
-                    "%s ping",
-                    event["metadata"]["event_user_id"],
-                )
+            # Ignore events of other users, when an admin has created the webhook
+            if event["creator_id"] != user_id:
+                self.webhook_logger.info("Ignore event for other user")
             else:
-                self.webhook_logger.info(
-                    "%s %s %s %s",
-                    event["metadata"]["event_user_id"],
-                    event["metadata"]["action"],
-                    event["metadata"]["model"],
-                    event["metadata"]["path"],
+                # Set info about webhook events
+                user_workspace.last_webhook_event_received_at = datetime.now(
+                    timezone.utc
                 )
+                user.save()
+
+                # Process webhook payload
+                if event["payload"] == "ping":
+                    self.webhook_logger.info(
+                        "%s ping",
+                        event["metadata"]["event_user_id"],
+                    )
+                else:
+                    self.webhook_logger.info(
+                        "%s %s %s %s",
+                        event["metadata"]["event_user_id"],
+                        event["metadata"]["action"],
+                        event["metadata"]["model"],
+                        event["metadata"]["path"],
+                    )
 
             return response, 200
 
