@@ -264,7 +264,8 @@ class Resolver:
             datetime.combine(start_date, datetime.min.time()) - timezone_tolerance
         )
         end_date_with_offset = (
-            datetime.combine(end_date, datetime.min.time()) + timezone_tolerance
+            datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+            + timezone_tolerance
         )
 
         time_entries = TimeEntry.objects(
