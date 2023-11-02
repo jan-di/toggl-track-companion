@@ -1,7 +1,7 @@
 from os import path
 
 from flask import Flask
-from src.web import FlaskApp
+from src.web.factory import FlaskFactory
 from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
@@ -16,15 +16,15 @@ config = Config(path.join(script_dir, ".env"))
 logger.setLevel(config.log_level)
 
 
-def get_app() -> Flask:
+def start() -> Flask:
     Database.connect(config.database_uri)
 
-    app = FlaskApp(config.flask_session_secret, script_dir)
+    app = FlaskFactory.create_app(config.flask_session_secret, script_dir)
 
-    return app.app
+    return app
 
 
-def worker_exit(_server, _worker):
+def worker_exit(_server, _worker) -> None:
     Database.disconnect()
 
 

@@ -7,7 +7,7 @@ source /venv/bin/activate
 start_web () {
   echo "Start Web"
 
-  gunicorn 'web_prod:get_app()'
+  gunicorn 'web_prod:start()'
 }
 
 start_updater () {

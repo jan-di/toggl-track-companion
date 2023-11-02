@@ -2,7 +2,7 @@
 
 from os import path
 
-from src.web import FlaskApp
+from src.web.factory import FlaskFactory
 from src.util.config import Config
 from src.util.log import Log
 from src.db.database import Database
@@ -20,7 +20,7 @@ def main():
     logger.setLevel(config.log_level)
     Database.connect(config.database_uri)
 
-    web_app = FlaskApp(
+    web_app = FlaskFactory.create_app(
         config.flask_session_secret,
         script_dir,
         config.server_url,

@@ -2,8 +2,8 @@ from threading import Event as ThreadingEvent
 import logging
 import signal
 from datetime import date, datetime, timezone
+from flask import Flask
 
-from src.web import FlaskApp
 from src.toggl.api import TogglApi
 from src.toggl.model import SubscriptionData, EventFilterData
 from src.db.entity import (
@@ -25,13 +25,13 @@ class Updater:
         self,
         sync_interval_calendar: int,
         sync_interval_toggl: int,
-        web_app: FlaskApp,
+        flask: Flask,
         server_id: str,
     ) -> None:
         self.exit_event = ThreadingEvent()
         self.sync_interval_calendar = sync_interval_calendar
         self.sync_interval_toggl = sync_interval_toggl
-        self.flask_app = web_app
+        self.flask = flask
         self.server_id = server_id
         exit_signals = {1: "SIGHUP", 2: "SIGINT", 15: "SIGTERM"}
 
@@ -106,7 +106,7 @@ class Updater:
 
                     # prepare data for new webhook
                     webhook_description = f"ttc/{self.server_id}/{user.user_id}"
-                    webhook_url = self.flask_app.app.url_for(
+                    webhook_url = self.flask.url_for(
                         "webhook",
                         workspace_id=user_workspace.workspace.workspace_id,
                         user_id=user.user_id,
@@ -167,8 +167,10 @@ class Updater:
                         start_date = date(year, 1, 1)
                         end_date = date(year, 12, 31)
 
-                        time_entry_dataset += toggl_api.get_workspace_time_entry_report_start_end(
-                            workspace.workspace_id, start_date, end_date
+                        time_entry_dataset += (
+                            toggl_api.get_workspace_time_entry_report_start_end(
+                                workspace.workspace_id, start_date, end_date
+                            )
                         )
                     for time_entry_data in time_entry_dataset:
                         TimeEntry.create_or_update_via_report_api_data(
