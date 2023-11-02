@@ -3,7 +3,8 @@ ARG IMAGE_TAG
 FROM mcr.microsoft.com/devcontainers/python:${IMAGE_TAG}
 
 ENV PYTHONUNBUFFERED=1 \
-  PYTHONPATH=/workspace
+  PYTHONPATH=/workspace \
+  PYTHONDONTWRITEBYTECODE=1
 
 # [Choice] Node.js version: none, lts/*, 16, 14, 12, 10
 ARG NODE_VERSION="none"

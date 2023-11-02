@@ -5,16 +5,16 @@ from flask import Flask, session, request, redirect, render_template, url_for
 from httpx import HTTPStatusError
 import humanize
 import pytz
-import json
 from urllib.parse import urlparse
 import hmac
 from mongoengine import DoesNotExist
+from src.toggl.model import TagData
 
 import version
-from src.toggl import TogglApi, TogglUpdater
-from src.db.schema import User, Workspace
+from src.db.entity import User, Workspace, Tag
 from src.schedule import Resolver, CalendarSync
 from src.util.log import Log
+from src.toggl.api import TogglApi
 
 
 class FlaskApp:
@@ -49,16 +49,15 @@ class FlaskApp:
                 password = request.form["password"]
 
                 toggl_api = TogglApi(username=username, password=password)
-                toggl_updater = TogglUpdater()
 
                 try:
                     user_data = toggl_api.get_me()
 
-                    session["user_id"] = user_data["id"]
-                    session["user_name"] = user_data["fullname"]
+                    session["user_id"] = user_data.id
+                    session["user_name"] = user_data.fullname
                     next_url = request.args.get("next", url_for("index"))
 
-                    toggl_updater.create_or_update_user_from_api(user_data)
+                    User.create_or_update_via_api_data(user_data)
 
                     return redirect(next_url)
                 except HTTPStatusError:
@@ -141,6 +140,15 @@ class FlaskApp:
                         event["metadata"]["model"],
                         event["metadata"]["path"],
                     )
+
+                    match event["metadata"]["model"]:
+                        case "tag":
+                            tag_data = TagData.from_dict(event["payload"])
+                            if event["metadata"]["action"] in ("created", "updated"):
+                                Tag.create_or_update_tag_from_api(tag_data)
+                            elif event["metadata"]["action"] == "deleted":
+                                # toggl api does not send this event :(
+                                pass
 
             return response, 200
 

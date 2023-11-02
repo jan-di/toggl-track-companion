@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 from icalendar import Calendar
 from mongoengine import Document
 from mongoengine.queryset.visitor import Q
-from src.db.schema import User, Workspace, Schedule, Event, TimeEntry
+from src.db.entity import User, Workspace, Schedule, Event, TimeEntry
 
 
 class Day:
