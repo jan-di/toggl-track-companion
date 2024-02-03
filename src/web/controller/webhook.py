@@ -5,8 +5,8 @@ import hmac
 from urllib.parse import urlparse
 from datetime import datetime, timezone
 
-from src.toggl.model import TagData
-from src.db.entity import User, Tag
+from src.toggl.model import TagData, ClientData, ProjectData, TimeEntryData
+from src.db.entity import User, Tag, Client, Project, TimeEntry
 
 
 class Webhook:
@@ -90,9 +90,27 @@ class Webhook:
                     case "tag":
                         tag_data = TagData.from_dict(event["payload"])
                         if event["metadata"]["action"] in ("created", "updated"):
-                            Tag.create_or_update_tag_from_api(tag_data)
+                            Tag.create_or_update_via_api_data(tag_data)
                         elif event["metadata"]["action"] == "deleted":
-                            # toggl api does not send this event :(
-                            pass
+                            # Tag.delete_via_id(tag_data.id)
+                            pass  # toggl api does not send this event at the moment :(
+                    case "client":
+                        client_data = ClientData.from_dict(event["payload"])
+                        if event["metadata"]["action"] in ("created", "updated"):
+                            Client.create_or_update_via_api_data(client_data)
+                        elif event["metadata"]["action"] == "deleted":
+                            Client.delete_via_id(client_data.id)
+                    case "project":
+                        project_data = ProjectData.from_dict(event["payload"])
+                        if event["metadata"]["action"] in ("created", "updated"):
+                            Project.create_or_update_via_api_data(project_data)
+                        elif event["metadata"]["action"] == "deleted":
+                            Project.delete_via_id(project_data.id)
+                    case "time_entry":
+                        time_entry_data = TimeEntryData.from_dict(event["payload"])
+                        if event["metadata"]["action"] in ("created", "updated"):
+                            TimeEntry.create_or_update_via_api_data(time_entry_data)
+                        elif event["metadata"]["action"] == "deleted":
+                            TimeEntry.delete_via_id(time_entry_data.id)
 
         return response, 200

@@ -11,13 +11,17 @@ class ApiResource:
                     setattr(
                         obj,
                         field.name,
-                        list(
-                            map(
-                                lambda o: cls.__from_dict_value(
-                                    field.type.__args__[0], o
-                                ),
-                                data[field.name],
+                        (
+                            list(
+                                map(
+                                    lambda o: cls.__from_dict_value(
+                                        field.type.__args__[0], o
+                                    ),
+                                    data[field.name],
+                                )
                             )
+                            if data[field.name] is not None
+                            else []
                         ),
                     )
                 else:

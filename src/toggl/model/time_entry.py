@@ -22,6 +22,7 @@ class TimeEntryData(ApiResource):
     user_id: int = None
     workspace_id: int = None
 
+
 @dataclass
 class SubTimeEntryReportData(ApiResource):
     """

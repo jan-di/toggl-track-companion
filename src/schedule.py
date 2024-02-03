@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 import re
 import httpx
 from dateutil.rrule import rrulestr
@@ -7,6 +7,7 @@ from icalendar import Calendar
 from mongoengine import Document
 from mongoengine.queryset.visitor import Q
 from src.db.entity import User, Workspace, Schedule, Event, TimeEntry
+from pytz import utc, timezone
 
 
 class Day:
@@ -280,8 +281,10 @@ class Resolver:
                 & Q(stopped_at__gte=end_date_with_offset)
             )
         )
+
+        local_timezone = timezone(user.timezone)
         for time_entry in time_entries:
-            Resolver.apply_time_entry(report.days, time_entry)
+            Resolver.apply_time_entry(report.days, time_entry, local_timezone)
 
         # aggregate days
         for day in report.days.values():
@@ -346,13 +349,13 @@ class Resolver:
                 days[day_key].events.add(event)
 
     @classmethod
-    def apply_time_entry(cls, days: list[Day], time_entry: TimeEntry):
-        started_at_local = time_entry.started_at + timedelta(
-            seconds=time_entry.started_at_offset
-        )
-        stopped_at_local = time_entry.stopped_at + timedelta(
-            seconds=time_entry.stopped_at_offset
-        )
+    def apply_time_entry(cls, days: list[Day], time_entry: TimeEntry, timezone: timezone):
+        if time_entry.stopped_at is None:
+            # For now, skip time entries that aren't stopped yet
+            return
+        
+        started_at_local = time_entry.started_at.astimezone(timezone)
+        stopped_at_local = time_entry.stopped_at.astimezone(timezone)
 
         last_slice = False
         while True:
@@ -498,11 +501,11 @@ class CalendarSync:
     def update_user(
         self, user: User, next_calendar_sync: int, is_calendar_sync=False
     ) -> User:
-        user.next_calendar_sync_at = datetime.now(timezone.utc) + timedelta(
+        user.next_calendar_sync_at = datetime.now(utc) + timedelta(
             seconds=next_calendar_sync
         )
 
         if is_calendar_sync:
-            user.last_calendar_sync_at = datetime.now(timezone.utc)
+            user.last_calendar_sync_at = datetime.now(utc)
 
         return user.save()

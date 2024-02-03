@@ -1,6 +1,6 @@
 from flask import Response, render_template, session
 
-from src.db.entity.user import User
+from src.db.entity import User
 
 
 class Index:
