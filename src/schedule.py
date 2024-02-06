@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 import re
 import httpx
 from dateutil.rrule import rrulestr
@@ -6,7 +6,8 @@ from dateutil.relativedelta import relativedelta
 from icalendar import Calendar
 from mongoengine import Document
 from mongoengine.queryset.visitor import Q
-from src.db.schema import User, Workspace, Schedule, Event, TimeEntry
+from src.db.entity import User, Workspace, Schedule, Event, TimeEntry
+from pytz import utc, timezone
 
 
 class Day:
@@ -233,6 +234,74 @@ class Report:
         return running_delta
 
 
+class TimeEntryFilter:
+    # There is no timezone that differs more than +/- 15 hours from UTC
+    TIMEZONE_TOLERANCE_HOURS = 15
+
+    @classmethod
+    def fetch_time_entries(
+        cls, user: User, workspace: Workspace, start_date: date, end_date: date
+    ):
+
+        timezone_tolerance = timedelta(hours=__class__.TIMEZONE_TOLERANCE_HOURS)
+
+        start_date_with_offset = (
+            datetime.combine(start_date, datetime.min.time()) - timezone_tolerance
+        )
+        end_date_with_offset = (
+            datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+            + timezone_tolerance
+        )
+
+        time_entries = TimeEntry.objects(
+            Q(user=user)
+            & Q(workspace=workspace)
+            & (
+                Q(started_at__gte=start_date_with_offset)
+                & Q(started_at__lte=end_date_with_offset)
+                | Q(stopped_at__gte=start_date_with_offset)
+                & Q(stopped_at__lte=end_date_with_offset)
+                | Q(started_at__lte=start_date_with_offset)
+                & Q(stopped_at__gte=end_date_with_offset)
+            )
+        )
+
+        return time_entries
+
+
+class Heatmap:
+    @classmethod
+    def create_report(
+        self, user: User, workspace: Workspace, start_date: date, end_date: date
+    ):
+        time_entries = TimeEntryFilter.fetch_time_entries(
+            user, workspace, start_date, end_date
+        )
+
+        user_timezone = timezone(user.timezone)
+        values = [[0] * (24 * 60) for _ in range(7)]
+
+        for time_entry in time_entries:
+            if time_entry.stopped_at is None:
+                # Skip time entries that arent finished
+                continue
+
+            started_at_local = time_entry.started_at.astimezone(user_timezone)
+            stopped_at_local = time_entry.stopped_at.astimezone(user_timezone)
+
+            current_dt = started_at_local
+            while current_dt <= stopped_at_local:
+                minute = current_dt.hour * 60 + current_dt.minute
+                weekday = current_dt.weekday()
+
+                values[weekday][minute] += 1
+                current_dt += timedelta(minutes=1)
+
+        times = [f"{i // 60:02d}:{i % 60:02d}" for i in range(0, 24 * 60)]
+
+        return values, times
+
+
 class Resolver:
     TIMEZONE_TOLERANCE_HOURS = 15
 
@@ -264,7 +333,8 @@ class Resolver:
             datetime.combine(start_date, datetime.min.time()) - timezone_tolerance
         )
         end_date_with_offset = (
-            datetime.combine(end_date, datetime.min.time()) + timezone_tolerance
+            datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+            + timezone_tolerance
         )
 
         time_entries = TimeEntry.objects(
@@ -279,8 +349,10 @@ class Resolver:
                 & Q(stopped_at__gte=end_date_with_offset)
             )
         )
+
+        local_timezone = timezone(user.timezone)
         for time_entry in time_entries:
-            Resolver.apply_time_entry(report.days, time_entry)
+            Resolver.apply_time_entry(report.days, time_entry, local_timezone)
 
         # aggregate days
         for day in report.days.values():
@@ -345,13 +417,15 @@ class Resolver:
                 days[day_key].events.add(event)
 
     @classmethod
-    def apply_time_entry(cls, days: list[Day], time_entry: TimeEntry):
-        started_at_local = time_entry.started_at + timedelta(
-            seconds=time_entry.started_at_offset
-        )
-        stopped_at_local = time_entry.stopped_at + timedelta(
-            seconds=time_entry.stopped_at_offset
-        )
+    def apply_time_entry(
+        cls, days: list[Day], time_entry: TimeEntry, timezone: timezone
+    ):
+        if time_entry.stopped_at is None:
+            # For now, skip time entries that aren't stopped yet
+            return
+
+        started_at_local = time_entry.started_at.astimezone(timezone)
+        stopped_at_local = time_entry.stopped_at.astimezone(timezone)
 
         last_slice = False
         while True:
@@ -497,11 +571,11 @@ class CalendarSync:
     def update_user(
         self, user: User, next_calendar_sync: int, is_calendar_sync=False
     ) -> User:
-        user.next_calendar_sync_at = datetime.now(timezone.utc) + timedelta(
+        user.next_calendar_sync_at = datetime.now(utc) + timedelta(
             seconds=next_calendar_sync
         )
 
         if is_calendar_sync:
-            user.last_calendar_sync_at = datetime.now(timezone.utc)
+            user.last_calendar_sync_at = datetime.now(utc)
 
         return user.save()

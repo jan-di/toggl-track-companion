@@ -2,11 +2,6 @@
 
 {% block content %}
 
-{#
-TODO: When issue is fixed, naturaltime can use time zone aware datetimes again
-https://github.com/python-humanize/humanize/issues/122
-#}
-
 <h1>Profile</h1>
 
 <div class="row mb-4">
@@ -103,11 +98,18 @@ https://github.com/python-humanize/humanize/issues/122
       pattern="https://.*">
   <div class="form-text">The URL should point to a ical file that contains your work schedule.</div>
 
+  {% if user_workspace.last_webhook_event_received_at is not none %}
+  <br/>
+    Last webhook event received: <span data-bs-toggle="tooltip" data-bs-placement="top" 
+          data-bs-title="{{ user_workspace.last_webhook_event_received_at | as_timezone(user.timezone) | format_datetime() }}">
+        {{ humanize.naturaltime(user_workspace.last_webhook_event_received_at, when=now) }}</span>
+    <br/>
+  {% endif %}
+
   <button type="submit" class="btn btn-primary mt-3">Save</button>
 <br/>
+<br/>
 {% endfor %}
-
-
 
 </form>
 
