@@ -1,0 +1,29 @@
+{% extends 'base.html.j2' %}
+
+{% block content %}
+
+<h1>Stats</h1>
+
+<figure>
+    <div id="heatmap"></div>
+</figure>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<script>
+
+var data = [
+  {
+    z: {{ heatmap | tojson }},
+    y: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    x: {{ times | tojson }},
+    type: 'heatmap'
+  }
+];
+
+Plotly.newPlot('heatmap', data);
+
+</script>
+
+{% endblock content %}
+
+ 

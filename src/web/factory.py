@@ -61,6 +61,11 @@ class FlaskFactory:
         def profile():
             return profile_controller.profile()
 
+        @app.route("/stats/<int:workspace_id>")
+        @cls.__require_auth
+        def stats(workspace_id: int):
+            return report_controller.stats(workspace_id)
+
         @app.route("/detailed-report/<int:workspace_id>")
         @cls.__require_auth
         def report(workspace_id: int):

@@ -234,6 +234,74 @@ class Report:
         return running_delta
 
 
+class TimeEntryFilter:
+    # There is no timezone that differs more than +/- 15 hours from UTC
+    TIMEZONE_TOLERANCE_HOURS = 15
+
+    @classmethod
+    def fetch_time_entries(
+        cls, user: User, workspace: Workspace, start_date: date, end_date: date
+    ):
+
+        timezone_tolerance = timedelta(hours=__class__.TIMEZONE_TOLERANCE_HOURS)
+
+        start_date_with_offset = (
+            datetime.combine(start_date, datetime.min.time()) - timezone_tolerance
+        )
+        end_date_with_offset = (
+            datetime.combine(end_date + timedelta(days=1), datetime.min.time())
+            + timezone_tolerance
+        )
+
+        time_entries = TimeEntry.objects(
+            Q(user=user)
+            & Q(workspace=workspace)
+            & (
+                Q(started_at__gte=start_date_with_offset)
+                & Q(started_at__lte=end_date_with_offset)
+                | Q(stopped_at__gte=start_date_with_offset)
+                & Q(stopped_at__lte=end_date_with_offset)
+                | Q(started_at__lte=start_date_with_offset)
+                & Q(stopped_at__gte=end_date_with_offset)
+            )
+        )
+
+        return time_entries
+
+
+class Heatmap:
+    @classmethod
+    def create_report(
+        self, user: User, workspace: Workspace, start_date: date, end_date: date
+    ):
+        time_entries = TimeEntryFilter.fetch_time_entries(
+            user, workspace, start_date, end_date
+        )
+
+        user_timezone = timezone(user.timezone)
+        values = [[0] * (24 * 60) for _ in range(7)]
+
+        for time_entry in time_entries:
+            if time_entry.stopped_at is None:
+                # Skip time entries that arent finished
+                continue
+
+            started_at_local = time_entry.started_at.astimezone(user_timezone)
+            stopped_at_local = time_entry.stopped_at.astimezone(user_timezone)
+
+            current_dt = started_at_local
+            while current_dt <= stopped_at_local:
+                minute = current_dt.hour * 60 + current_dt.minute
+                weekday = current_dt.weekday()
+
+                values[weekday][minute] += 1
+                current_dt += timedelta(minutes=1)
+
+        times = [f"{i // 60:02d}:{i % 60:02d}" for i in range(0, 24 * 60)]
+
+        return values, times
+
+
 class Resolver:
     TIMEZONE_TOLERANCE_HOURS = 15
 
@@ -349,11 +417,13 @@ class Resolver:
                 days[day_key].events.add(event)
 
     @classmethod
-    def apply_time_entry(cls, days: list[Day], time_entry: TimeEntry, timezone: timezone):
+    def apply_time_entry(
+        cls, days: list[Day], time_entry: TimeEntry, timezone: timezone
+    ):
         if time_entry.stopped_at is None:
             # For now, skip time entries that aren't stopped yet
             return
-        
+
         started_at_local = time_entry.started_at.astimezone(timezone)
         stopped_at_local = time_entry.stopped_at.astimezone(timezone)
 
