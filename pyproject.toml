@@ -13,7 +13,7 @@ python-dateutil = "~=2.8"
 flask = "~=3.0"
 cryptography = "~=42.0"
 icalendar = "~=5.0"
-mongoengine = "~=0.27"
+mongoengine = "~=0.28"
 humanize = "~=4.8"
 gunicorn = "~=21.2"
 
