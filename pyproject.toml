@@ -14,7 +14,7 @@ flask = "~=3.0"
 cryptography = "~=42.0"
 icalendar = "~=5.0"
 mongoengine = "~=0.28"
-humanize = "~=4.8"
+humanize = "~=4.10"
 gunicorn = "~=22.0"
 
 [tool.poetry.group.dev]
