@@ -53,7 +53,7 @@ class TogglApi:
     ) -> list[WorkspaceData]:
         response_body = self.__simple_request(
             "GET",
-            "/api/v9/me/all_workspaces",
+            "/api/v9/me/workspaces",
         )
         return WorkspaceData.from_dict_list(response_body)
 
