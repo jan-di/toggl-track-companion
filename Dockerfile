@@ -1,11 +1,11 @@
-FROM docker.io/library/python:3.12 as base
+FROM docker.io/library/python:3.12 AS base
 
 ARG APP_VERSION=0.0.0
 ARG APP_COMMIT=0000000000
 
 ENV PYTHONUNBUFFERED=1
 
-FROM base as builder
+FROM base AS builder
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -19,7 +19,7 @@ RUN python -m venv /venv
 COPY pyproject.toml poetry.lock ./
 RUN . /venv/bin/activate && poetry install --sync --without dev --no-root
 
-FROM base as final
+FROM base AS final
 
 # Copy python dependencies
 COPY --from=builder /venv /venv
