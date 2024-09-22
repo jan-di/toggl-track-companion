@@ -570,17 +570,17 @@ testutils = ["gitpython (>3)"]
 
 [[package]]
 name = "pylint-mongoengine"
-version = "0.5.0"
+version = "0.6.0"
 description = "A Pylint plugin to help it understand MongoEngine"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pylint-mongoengine-0.5.0.tar.gz", hash = "sha256:0eaf5aab386a626d72f6a5475c5d9c2a972b6d64a14039e171f3b7a118de3903"},
+    {file = "pylint_mongoengine-0.6.0.tar.gz", hash = "sha256:fd489928a1243fcb67abf960b954f87fd1a107c35168c4a5ab797d40ac7f3105"},
 ]
 
 [package.dependencies]
-pylint = ">=2.3.1"
-pylint-plugin-utils = ">=0.5"
+pylint = ">=3.2.0"
+pylint-plugin-utils = ">=0.8.2"
 
 [[package]]
 name = "pylint-plugin-utils"
@@ -791,4 +791,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "3778c6dea4a91d1c37e564c5055fb1552e4f34871bb138d78d1ff5a9f3c98261"
+content-hash = "e97618d8cfa6beb43948b1725ba4bc7123f8ac7a2cb6cf97f8a0994beafe87be"

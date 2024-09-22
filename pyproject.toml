@@ -20,7 +20,7 @@ gunicorn = "~=23.0"
 [tool.poetry.group.dev]
 [tool.poetry.group.dev.dependencies]
 pylint = "~=3.3"
-pylint-mongoengine = "~=0.5"
+pylint-mongoengine = "~=0.6"
 
 [build-system]
 requires = ["poetry-core"]
