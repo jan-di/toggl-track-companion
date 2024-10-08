@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.12 AS base
+FROM docker.io/library/python:3.13 AS base
 
 ARG APP_VERSION=0.0.0
 ARG APP_COMMIT=0000000000
